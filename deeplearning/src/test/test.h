@@ -11,7 +11,7 @@ namespace utf = boost::unit_test;
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 
-const elem_t eps = 1.0e-8;
+const data_t eps = 1.0e-8;
 //#define inc 0.00001
 
 #define MY_FLOAT_EQUAL(A, B, C) \

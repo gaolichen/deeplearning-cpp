@@ -7,7 +7,7 @@
 #include <boost/random/uniform_01.hpp>
 
 boost::random::mt19937 rng(time(0));
-boost::random::uniform_01<elem_t> dist01;
+boost::random::uniform_01<data_t> dist01;
 std::ostream* logOut = &std::cout;
 LogLevel currentLogLevel = Error;
 
@@ -62,7 +62,7 @@ long double LogFactorial(int n)
 	return logfactorial[n];
 }
 
-elem_t random(elem_t min, elem_t max)
+data_t random(data_t min, data_t max)
 {
     return min + (max - min) * dist01(rng);
 }
@@ -80,19 +80,6 @@ u128 random128(u128 max)
 
     return (((u128)high(rng)) << 64) | low(rng);
 }
-
-var_t randomComplex(elem_t minR, elem_t maxR) {
-    elem_t r;
-    while(true) {
-        r = random(minR, maxR);
-        if (random(0.0, maxR * maxR - minR * minR) < (r * r - minR * minR)) {
-            break;
-        }
-    }
-    elem_t phi = random(0.0, 2 * Pi);
-    return var_t(r * cos(phi), r * sin(phi));
-}
-
 
 
 double EuclideanDist(double x1, double y1, double x2, double y2)
@@ -116,73 +103,6 @@ intN BioCoeff(int n, int k)
 
 	return ret;
 }
-
-bool isSingular(var_t u, elem_t eps) {
-    return std::abs(u.real()) < eps && (std::abs(u.imag() + 0.5) < eps || std::abs(u.imag() - 0.5) < eps);
-}
-
-var_t e2ip(var_t u, elem_t eps) {
-    if (isSingular(u)) {
-        if (u.imag() > (elem_t)0.0) {
-            return (elem_t)1.0;
-        } else {
-            return (elem_t)-1.0;
-        }
-    }
-    return (u + var_t(0.0, 0.5))/(u - var_t(0.0, 0.5));
-/*    if (abs(u.real()) > EPS) {
-        return (u + var_t(0.0, 0.5))/(u - var_t(0.0, 0.5));
-    } else {
-        if (abs(u.imag() + 0.5) <= EPS) {
-            return var_t(0, -EPS);
-        } else if (abs(u.imag() - 0.5) <= EPS) {
-            return var_t(0, 1/EPS);
-        } else {
-            return (u + var_t(0.0, 0.5))/(u - var_t(0.0, 0.5));
-        }
-    }*/
-}
-
-var_t e2ip(const Vector &u, elem_t eps) {
-    var_t ret((elem_t)1.0);
-    for (int i = 0; i < u.size(); i++) {
-        ret *= e2ip(u[i], eps);
-    }
-    return ret;
-}
-
-elem_t momentum(Vector u, elem_t eps) {
-    var_t ret = e2ip(u, eps);
-//    return log(ret) * var_t(0.0, -1.0);
-    return std::arg(ret);
-}
-
-var_t sMatrix(var_t u1, var_t u2) {
-    return (u1 - u2 - var_t(0, 1.0))/(u1 - u2 + var_t(0, 1.0));
-}
-
-elem_t floatMod(elem_t num1, elem_t num2) {
-    return num1 - floor((num1 + num2 * 0.5)/num2) * num2;
-}
-
-bool isZero(const var_t &val) {
-    return abs(val.real()) < EPS && abs(val.imag()) < EPS;
-}
-
-var_t chop(var_t v, elem_t eps) {
-    elem_t re = v.real();
-    elem_t im = v.imag();
-    if (std::abs(re) < eps) re = 0.0L;
-    if (std::abs(im) < eps) im = 0.0L;
-    return var_t(re, im);
-}
-
-void chop(Vector &v, elem_t eps) {
-    for (int i = 0; i < v.size(); i++) {
-        v[i] = chop(v[i], eps);
-    }
-}
-
 
 Stopwatch::Stopwatch()
 {

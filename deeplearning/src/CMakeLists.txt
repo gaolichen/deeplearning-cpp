@@ -25,14 +25,24 @@ enable_cxx_compiler_flag_if_supported("-Werror")
 #set_target_properties(lrcalc PROPERTIES IMPORTED_LOCATION ${LRCALC_ROOT}/lib/liblrcalc.so )
 
 SET(DPL_LIB_SRCS
+    activation.cpp
 	common.cpp
+	layer.cpp
+	model.cpp
+	node.cpp
+	loss.cpp
 )
 
 IF(WIN32)
 	SET(DPL_LIB_SRCS 
 		${DPL_LIB_SRCS}
+		activation.h
         common.h
-	)	
+        layer.h
+    	model.h
+    	node.h
+    	loss.h
+	)
 	source_group("Header Files" FILES *.h)
 ENDIF(WIN32)
 

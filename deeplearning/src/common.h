@@ -50,7 +50,7 @@ typedef u128 intN;
 #endif 
 
 #ifdef NATIVE_FLOAT
-typedef long double elem_t;
+typedef long double data_t;
 #else
 typedef cpp_dec_float_50 elem_t; 
 #endif
@@ -69,9 +69,8 @@ typedef u128 count_t;
 typedef i64 count_t;
 #endif
 
-typedef std::complex<elem_t> var_t;
-typedef Eigen::Matrix<var_t, Eigen::Dynamic, Eigen::Dynamic> Matrix;
-typedef Eigen::Matrix<var_t, Eigen::Dynamic, 1> Vector;
+typedef Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic> Matrix;
+typedef Eigen::Matrix<data_t, Eigen::Dynamic, 1> Vector;
 typedef Eigen::Matrix<int, Eigen::Dynamic, 1> VectorI;
 enum LogLevel {Info = 0, Warning = 1, Error = 2, Off = 100 };
 
@@ -81,7 +80,7 @@ extern long double logfactorial[MAX_COUNT + 1];
 extern intN bionomial[MAX_N + 1][MAX_N + 1];
 
 extern boost::random::mt19937 rng;
-extern boost::random::uniform_01<elem_t> dist01;
+extern boost::random::uniform_01<data_t> dist01;
 extern std::ostream* logOut;
 extern LogLevel currentLogLevel;
 
@@ -120,9 +119,7 @@ i64 random64(i64 max);
 // return random integer between 0 and max, including max
 u128 random128(u128 max);
 
-elem_t random(elem_t min, elem_t max);
-
-var_t randomComplex(elem_t minR, elem_t maxR);
+data_t random(data_t min, data_t max);
 
 double EuclideanDist(double x1, double y1, double x2, double y2);
 double EuclideanDistSquare(double x1, double y1, double x2, double y2);
@@ -212,24 +209,6 @@ T arrayDot(T *a1, T *a2, int size)
 }
 
 intN BioCoeff(int n, int k);
-
-bool isSingular(var_t u, elem_t eps = EPS);
-
-var_t e2ip(var_t u, elem_t eps = EPS);
-
-var_t e2ip(const Vector &u, elem_t eps = EPS);
-
-elem_t momentum(Vector u, elem_t eps = EPS);
-
-var_t sMatrix(var_t u1, var_t u2);
-
-elem_t floatMod(elem_t num1, elem_t num2);
-
-bool isZero(const var_t &val);
-
-var_t chop(var_t v, elem_t eps = EPS);
-
-void chop(Vector &v, elem_t eps = EPS);
 
 class Stopwatch
 {
