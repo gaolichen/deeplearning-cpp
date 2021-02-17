@@ -19,31 +19,28 @@ BOOST_AUTO_TEST_CASE(Demo)
     std::cout << "runnng demo." << std::endl;
     Model model;
     size_t dataSize = 100;
-    size_t featureSize = 10;
-    size_t layerSize = 3;
-    int batchSize = 10;
-    int epic = 20;
-    for (int i = 0; i < layerSize; i++) {
-        Layer* layer = new Layer();
-        for (int j = 0; j < featureSize; j++) {
-            if (i == 0) {
-                layer->addNode(new FirstLayerNode());
-            } else {
-                layer->addNode(new HiddenNode("lula"));
-            }
-        }
-        model.addLayer(layer);
+    size_t featureSize = 5;
+    size_t hiddenLayerSize = 3;
+    int epic = 100;
+    data_t learningRate = 0.01;
+    model.addLayer(new FirstLayer(featureSize));
+
+    for (int i = 0; i < hiddenLayerSize; i++) {
+        model.addLayer(new SimpleHiddenLayer("relu", featureSize));
+//        model.addLayer(new SimpleHiddenLayer("", featureSize));
     }
+    model.addLayer(new RegressionOutputLayer());
     model.prepare();
     
     Matrix data = Matrix::Random(dataSize, featureSize);
-    Vector output = Vector::Random(dataSize);
+    Matrix y = Matrix::Random(dataSize, 1);
     
-    Vector loss = model.train(data, output, batchSize, epic);
-    Vector input = Vector::Random(featureSize);
+    Vector loss = model.train(data, y, epic, learningRate);
+    std::cout << "training loss=" << loss.transpose() << std::endl;
+        
+    RVector input = RVector::Random(featureSize);
     std::cout << "input=" << input << std::endl;
-    std::cout << "loss=" << loss << std::endl;
-    std::cout << model.eval(input) << std::endl;
+    std::cout << "output=" << model.eval(input) << std::endl;
     std::cout << "demo end." << std::endl;
 }
 

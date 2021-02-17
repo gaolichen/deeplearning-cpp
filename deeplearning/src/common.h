@@ -71,7 +71,8 @@ typedef i64 count_t;
 
 typedef Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic> Matrix;
 typedef Eigen::Matrix<data_t, Eigen::Dynamic, 1> Vector;
-typedef Eigen::Matrix<int, Eigen::Dynamic, 1> VectorI;
+typedef Eigen::Matrix<data_t, 1, Eigen::Dynamic> RVector;
+typedef Eigen::Array<data_t, Eigen::Dynamic, Eigen::Dynamic> Array;
 enum LogLevel {Info = 0, Warning = 1, Error = 2, Off = 100 };
 
 extern double Pi;
@@ -220,4 +221,18 @@ public:
 	double Elapsed(bool restart = false);
     std::string Now();
     std::string Log(bool restart = false);
+};
+
+class DPLException : public std::exception
+{
+private:
+	std::string _message;
+public:
+	DPLException(std::string message) {
+		this->_message = message;
+	}
+
+	virtual const char* what() const noexcept {
+		return _message.c_str();
+	}
 };

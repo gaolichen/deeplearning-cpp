@@ -4,17 +4,27 @@
 class LossFunction {
 private:
 public:
-    virtual data_t loss(const Vector& res, const Vector& expected) = 0;
+    virtual data_t loss(const RVector& res, const RVector& expected) = 0;
+    
+    virtual data_t diff(const RVector& res, const RVector& expected, int i) = 0;
     
     static LossFunction* create(std::string name);
 };
 
-class L2 : public LossFunction {
+class SquareLoss : public LossFunction {
 public:
-    virtual data_t loss(const Vector& res, const Vector& expected);
+    virtual data_t loss(const RVector& res, const RVector& expected);
+    virtual data_t diff(const RVector& res, const RVector& expected, int i);
 };
 
-class L1 : public LossFunction {
+class LinearLoss : public LossFunction {
 public:
-    virtual data_t loss(const Vector& res, const Vector& expected);
+    virtual data_t loss(const RVector& res, const RVector& expected);
+    virtual data_t diff(const RVector& res, const RVector& expected, int i);
+};
+
+class LogLoss : public LossFunction {
+public:
+    virtual data_t loss(const RVector& res, const RVector& expected);
+    virtual data_t diff(const RVector& res, const RVector& expected, int i);
 };

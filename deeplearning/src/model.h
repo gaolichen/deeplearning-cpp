@@ -1,23 +1,23 @@
 #pragma once
 #include "common.h"
 #include "layer.h"
-#include "loss.h"
 
 class Model {
 private:
     std::vector<Matrix> _weights;
     std::vector<const Layer*> _layers;
-    OutputNode *_output;
-    LossFunction* _loss;
+//    OutputNode *_output;
+//    LossFunction* _loss;
+//    data_t _learningRate;
 public:
-    Model(std::string loss = "L2");
+    Model();
     ~Model();
     
     void addLayer(const Layer* layer);
     
     void prepare();
     
-    Vector train(const Matrix& data, const Vector& res, size_t batchSize, size_t epic);
+    Vector train(const Matrix& data, const Vector& y, size_t epic, data_t learningRate);
     
-    data_t eval(const Vector& input);
+    RVector eval(const RVector& input);
 };

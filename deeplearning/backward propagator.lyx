@@ -1,0 +1,388 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Backward propagator
+\end_layout
+
+\begin_layout Standard
+In this note we find the formula for backward propagator algorithm in neutro
+ network.
+\end_layout
+
+\begin_layout Standard
+Suppose we have a network of 
+\begin_inset Formula $L+1$
+\end_inset
+
+ layers with 
+\begin_inset Formula $s_{0}$
+\end_inset
+
+, 
+\begin_inset Formula $s_{1}$
+\end_inset
+
+, 
+\begin_inset Formula $\cdots$
+\end_inset
+
+, 
+\begin_inset Formula $s_{L-1}$
+\end_inset
+
+, 
+\begin_inset Formula $s_{L}$
+\end_inset
+
+ non-constant nodes respectively.
+ The 
+\begin_inset Formula $0$
+\end_inset
+
+-th layer is the input layer and 
+\begin_inset Formula $L$
+\end_inset
+
+-th layer is the output layer.
+ For layer 
+\begin_inset Formula $0$
+\end_inset
+
+ to 
+\begin_inset Formula $L-1$
+\end_inset
+
+, each layer has a bias unit layer.
+ 
+\end_layout
+
+\begin_layout Standard
+We use 
+\begin_inset Formula $l$
+\end_inset
+
+ to label layers and 
+\begin_inset Formula $i$
+\end_inset
+
+, 
+\begin_inset Formula $j$
+\end_inset
+
+ to label the nodes of layers.
+ The parameter between layer 
+\begin_inset Formula $l$
+\end_inset
+
+ and layer 
+\begin_inset Formula $l+1$
+\end_inset
+
+ is 
+\begin_inset Formula $\Theta_{i}^{(l)j}$
+\end_inset
+
+, which is an 
+\begin_inset Formula $\left(s_{l+1}+1\right)\times\left(s_{l}+1\right)$
+\end_inset
+
+ dimensional matrix There are 
+\begin_inset Formula $M$
+\end_inset
+
+ sets of training data.
+ The 
+\begin_inset Formula $m$
+\end_inset
+
+-th set of data at 
+\begin_inset Formula $i$
+\end_inset
+
+-th node of 
+\begin_inset Formula $l$
+\end_inset
+
+-th layer denoted as 
+\begin_inset Formula $x_{i}^{(l)m}$
+\end_inset
+
+.
+ In the computer programming language, the first index of matrix is always
+ the lower index, i.e, 
+\begin_inset Formula $x_{i}^{m}$
+\end_inset
+
+ is represented as 
+\begin_inset Formula $x(i,m)$
+\end_inset
+
+ in computer programming language.
+\end_layout
+
+\begin_layout Standard
+We also define 
+\begin_inset Formula 
+\[
+z_{i}^{(l+1)m}=\Theta_{i}^{(l)j}x_{j}^{(l)m}=\Theta^{(l)}x^{(l)},\quad l=0,1,\dots,L-1
+\]
+
+\end_inset
+
+ To take into account the bias unit node, we define 
+\begin_inset Formula 
+\[
+\Theta_{0}^{(a)i}=\delta_{0}^{i},\quad a=0,1,\dots,L-1.
+\]
+
+\end_inset
+
+At each node, there an activation 
+\begin_inset Formula $g_{i}^{(l)}$
+\end_inset
+
+ at 
+\begin_inset Formula $i$
+\end_inset
+
+-th node of 
+\begin_inset Formula $l$
+\end_inset
+
+-th layer.
+ So 
+\begin_inset Formula $x_{i}^{(l)m}=g_{i}\left(z_{i}^{(l)m}\right)$
+\end_inset
+
+.
+ To use matrix notation, let us suppose 
+\begin_inset Formula 
+\[
+x_{i}^{(l)m}=g_{i}^{(l)j}\left(z_{j}^{(a)m}\right),\quad g_{i}^{(l)j}\propto\delta_{i}^{j}.
+\]
+
+\end_inset
+
+Now we have 
+\begin_inset Formula $z^{(0)}=x^{(0)}$
+\end_inset
+
+ are input data at 
+\begin_inset Formula $0$
+\end_inset
+
+-th layer.
+ And 
+\begin_inset Formula 
+\[
+x^{(1)m}=g^{(1)j}\left(z_{j}^{(1)m}\right)=g^{(1)j}\left(\Theta_{j}^{(0)k}x_{k}^{(0)m}\right)=g^{(1)}\circ\Theta^{(0)}x^{(0)m}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+x^{(2)m}=g^{(2)j}\left(z_{j}^{(2)m}\right)=g^{(2)j}\left(\Theta_{j}^{(1)k}x_{k}^{(1)m}\right)=g^{(2)}\circ\Theta^{(1)}x^{(1)m}=g^{(2)}\circ\Theta^{(1)}g^{(1)}\circ\Theta^{(0)}x^{(0)m}
+\]
+
+\end_inset
+
+ So 
+\begin_inset Formula 
+\[
+x^{(L)m}=g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(1)}g^{(1)}\circ\Theta^{(0)}x^{(0)m}
+\]
+
+\end_inset
+
+ So above are forward propagator algorithm.
+\end_layout
+
+\begin_layout Standard
+Now consider the backward propagator.
+ The loss function is 
+\begin_inset Formula $J\left(x^{(L)m},y^{m}\right)$
+\end_inset
+
+.
+ We want to find 
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial J_{\Theta}}{\partial\Theta_{i}^{(a)j}} & =\frac{\partial}{\partial\Theta_{i}^{(a)j}}J\left(x^{(L)1},y^{1},x^{(L)2},y^{2},\dots,x^{(L)M},y^{M}\right)\\
+ & =\frac{\partial}{\partial\Theta_{i}^{(a)j}}J\left[g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(a)}x^{(a)m},y^{m}\right]\\
+ & =\frac{\partial}{\partial\Theta_{i}^{(a)j}}J\left[g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(a+1)}g^{(a+1)}\circ z^{(a+1)m},y^{m}\right]\\
+ & =\frac{\partial}{\partial z_{i}^{(a+1)m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\Theta^{(a+1)}g^{(a+1)}\right]x_{j}^{(a)m}\\
+ & \equiv D_{m}^{(a+1)i}x_{j}^{(a)m}\\
+ & =x^{(a)m}D_{m}^{(a+1)}
+\end{align*}
+
+\end_inset
+
+where 
+\begin_inset Formula 
+\[
+D_{m}^{(l)i}\equiv\frac{\partial}{\partial z_{i}^{(l)m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\Theta^{(l)}g^{(l)}\left(z^{(l)}\right)\right]\Big|_{z^{(a)m}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Now 
+\begin_inset Formula 
+\begin{align*}
+{D_{m}^{(l-1)}}^{i} & =\frac{\partial}{\partial{z_{i}^{(l-1)}}^{m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\Theta^{(l-1)}g^{(l-1)}\right]\\
+ & =\frac{\partial}{\partial{z_{i}^{(l-1)}}^{m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(l-1)}g^{(l-1)}\left(z^{(l-1)\alpha}\right)\right]\\
+ & =\frac{\partial}{\partial{z_{j}^{(l)}}^{m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(l)}g^{(l)}\circ z^{(l)}\right]\frac{\partial z_{j}^{(l)m}}{\partial z_{i}^{(l-1)m}}\\
+ & =D_{m}^{(l)j}\frac{\partial\left(\Theta^{(l-1)}g^{(l-1)}\left(z^{(l-1)}\right)\right)_{j}}{\partial z_{i}^{(l-1)m}}\\
+ & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\frac{\partial\left(g_{k}^{(l-1)h}\left(z_{h}^{(a-1)m}\right)\right)}{\partial z_{i}^{(l-1)m}}\\
+ & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\left(g^{(l-1)}\right)_{k}^{\prime h}\delta_{h}^{i}\Big|_{z^{(a-1)m}}\\
+ & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\left(g^{(l-1)}\right)_{k}^{\prime i}\Big|_{z^{(a-1)m}}\\
+ & =D_{m}^{(l)j}\Theta_{j}^{(l-1)i}\left(g^{(l-1)}\right)^{\prime}\Big|_{z_{i}^{(a-1)m}}\\
+ & =\left(D^{(l)}\Theta^{(a-1)}\right).*\left(g^{(l-1)}\right)^{\prime}
+\end{align*}
+
+\end_inset
+
+where we have used 
+\begin_inset Formula $g_{k}^{i}\propto\delta_{k}^{i}$
+\end_inset
+
+, and 
+\begin_inset Formula 
+\[
+\left[\left(g^{(l)}\right)^{\prime}\right]_{m}^{i}\equiv\left(g^{(l)}\right)^{\prime}\Big|_{z_{i}^{(l)m}}
+\]
+
+\end_inset
+
+The dimension of 
+\begin_inset Formula $D^{(l)}$
+\end_inset
+
+ is 
+\begin_inset Formula $M\times s_{l}$
+\end_inset
+
+.
+ We have 
+\begin_inset Formula 
+\begin{align*}
+D_{m}^{(L)i} & \equiv\frac{\partial}{\partial z_{i}^{(L)m}}\left[J\circ g^{(L)}\left(z^{(L)}\right)\right]\\
+ & =\left(\partial_{m}J\right)g^{(L)\prime}\Big|_{z_{j}^{(L)m}}
+\end{align*}
+
+\end_inset
+
+ For log loss function
+\begin_inset Formula 
+\[
+J=-\frac{1}{M}\sum_{m}\sum_{i}\left[\left(1-y_{i}^{m}\right)\log\left(1-x_{i}^{m}\right)+y_{i}^{m}\log x_{i}^{m}\right]
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\partial_{x_{i}^{m}}J & =-\frac{1}{M}\left(-\frac{\left(1-y_{i}^{m}\right)}{1-x_{i}^{m}}+\frac{y_{i}^{m}}{x_{i}^{m}}\right)\\
+ & =-\frac{1}{M}\left(\frac{-\left(1-y_{i}^{m}\right)x_{i}^{m}+y_{i}^{m}\left(1-x_{i}^{m}\right)}{x_{i}^{m}\left(1-x_{i}^{m}\right)}\right)\\
+ & =-\frac{1}{M}\frac{y_{i}^{m}-x_{i}^{m}}{x_{i}^{m}\left(1-x_{i}^{m}\right)}
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+g^{(L)\prime}=\left(\frac{1}{1+e^{-z}}\right)^{\prime}=\frac{e^{-z}}{\left(1+e^{-z}\right)^{2}}=x^{2}\left(1/x-1\right)=x-x^{2}
+\]
+
+\end_inset
+
+ so 
+\begin_inset Formula 
+\[
+D_{m}^{(L)j}=\frac{1}{M}\left(x_{i}^{m}-y_{i}^{m}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

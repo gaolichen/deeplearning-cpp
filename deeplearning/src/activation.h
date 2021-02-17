@@ -5,6 +5,7 @@ class Activation {
 private:
 public:
     virtual data_t eval(data_t input) = 0;
+    virtual data_t diff(data_t input) = 0;
     
     static Activation* create(std::string name);
 };
@@ -18,20 +19,28 @@ public:
     virtual data_t eval(data_t input) {
         return input;
     }
+    
+    virtual data_t diff(data_t input) {
+        return 1.0;
+    }
 };
 
-class Somia : public Activation {
+class Sigmoid : public Activation {
 public:
-    Somia();
+    Sigmoid();
     
     virtual data_t eval(data_t input);
+    
+    virtual data_t diff(data_t input);
 };
 
-class Lula : public Activation {
+class ReLU : public Activation {
 private:
 public:
-    Lula();
+    ReLU();
     
     virtual data_t eval(data_t input);
+
+    virtual data_t diff(data_t input);
 };
 

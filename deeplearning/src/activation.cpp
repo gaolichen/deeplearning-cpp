@@ -1,19 +1,19 @@
 #include "activation.h"
 
 Activation* Activation::create(std::string name) {
-    if (name == "somia") {
-        return new Somia();
-    } else if (name == "lula") {
-        return new Lula();
+    if (name == "sigmoid") {
+        return new Sigmoid();
+    } else if (name == "relu") {
+        return new ReLU();
     } else {
         return new TrivialActivation();
     } 
 }
 
-Lula::Lula() {
+ReLU::ReLU() {
 }
 
-data_t Lula::eval(data_t input) {
+data_t ReLU::eval(data_t input) {
     if (input < 0) {
         return .0;
     } else {
@@ -21,9 +21,23 @@ data_t Lula::eval(data_t input) {
     }
 }
 
-Somia::Somia() {
+data_t ReLU::diff(data_t input) {
+    if (input < 0) {
+        return .0;
+    } else {
+        return 1.0;
+    }
 }
 
-data_t Somia::eval(data_t input) {
+Sigmoid::Sigmoid() {
+}
+
+data_t Sigmoid::eval(data_t input) {
     return 1.0/(1.0 + std::exp(-input));
 }
+
+data_t Sigmoid::diff(data_t input) {
+    data_t y = eval(input);
+    return y * (1.0 - y);
+}
+

@@ -1,14 +1,9 @@
 #include "model.h"
 
-Model::Model(std::string loss) {
-    std::cout << "model created.." << std::endl;
-    _output = new OutputNode();
-    _loss = LossFunction::create(loss);
+Model::Model() {
 }
 
 Model::~Model() {
-    delete _output;
-    delete _loss;
     for (size_t i = 0; i < _layers.size(); i++) {
         delete _layers[i];
     }
@@ -16,37 +11,70 @@ Model::~Model() {
 }
 
 void Model::addLayer(const Layer* layer) {
-    std::cout << "add a layer" << std::endl;
     _layers.push_back(layer);
 }
 
 void Model::prepare() {
-    srand(time(NULL));
     std::cout << "preparing model..." << std::endl;
-    std::cout << "_layers.size()=" << _layers.size() << std::endl;
-    for (size_t i = 0; i  + 1 < _layers.size(); i++) {
-        _weights.push_back(Matrix::Random(_layers[i]->size(), _layers[i + 1]->size()));
+    srand(time(NULL));
+    for (int i = 0; i < _layers.size() - 1; i++) {
+        _weights.push_back(Matrix::Random(_layers[i + 1]->numberOfInNodes(), _layers[i]->numberOfOutNodes()));
     }
-    _weights.push_back(Matrix::Random(_layers.back()->size(), 1));
-    std::cout << "model prepared" << std::endl;
 }
 
-Vector Model::train(const Matrix& data, const Vector& res, size_t batchSize, size_t epic) {
+Vector Model::train(const Matrix& data, const Vector& y, size_t epic, data_t learningRate) {
     std::cout << "begin training" << std::endl;
-    return Vector::Random(epic);
-}
-
-data_t Model::eval(const Vector& input) {
-    std::cout << "evaluating input..." << std::endl;
+    std::vector<Matrix> x(_layers.size());
+    std::vector<Matrix> z(_layers.size());
+    Vector loss(epic);
     
-    Vector vec1(input.size() + 1);
-    vec1(0) = 1.0;
-    vec1.block(1, 0, input.size(), 1) = input;
-    Vector vec2;
-    for (int i = 0; i < _layers.size(); i++) {
-        vec2 = _layers[i]->eval(vec1) * _weights[i];
-        std::swap(vec1, vec2);
+    for (int i = 0; i < epic; i++) {
+        // do forward propagator
+        for (int j = 0; j < _layers.size(); j++) {
+            if (j == 0) {
+                x[j] = _layers[j]->eval(data);
+            } else {
+                z[j] = _weights[j - 1] * x[j - 1];
+                x[j] = _layers[j]->eval(z[j]);
+                if (j == _layers.size() - 1) {
+                    const OutputLayer* layer = dynamic_cast<const OutputLayer*>(_layers[j]);
+                    loss(i) = layer->loss(x[j], y);
+                }
+            }            
+        }
+                
+        // backward propagator
+        // for output node.
+        Matrix delta;
+        for (int j = _layers.size() - 1; j >= 0; j--) {
+            if (j == _layers.size() - 1) {
+                const OutputLayer* layer = dynamic_cast<const OutputLayer*>(_layers[j]);
+                delta = layer->delta(x[j], y);
+            } else if (j == 0) {
+                _weights[j] -= learningRate * (x[j] * delta);
+            } else {
+                Matrix prev = delta;
+                delta = (prev * _weights[j]).array() * _layers[j]->gDiff(z[j]);
+                _weights[j] -= learningRate * (x[j] * prev);
+            }            
+        }
     }
     
-    return _output->eval(vec1(0));
+    return loss;
+}
+
+RVector Model::eval(const RVector& input) {
+    Matrix res;
+    Matrix z;
+    
+    for (int i = 0; i < _layers.size(); i++) {
+        if (i == 0) {
+            res = _layers[i]->eval(input);
+        } else {
+            z = _weights[i - 1] * res;
+            res = _layers[i]->eval(z);
+        }
+    }
+    
+    return res;
 }
