@@ -31,6 +31,9 @@ SET(DPL_LIB_SRCS
 	model.cpp
 	node.cpp
 	loss.cpp
+	regularization.cpp
+	datautil.cpp
+	propagator.cpp
 )
 
 IF(WIN32)
@@ -42,6 +45,9 @@ IF(WIN32)
     	model.h
     	node.h
     	loss.h
+    	regularization.h
+    	datautil.h
+    	propagator.h
 	)
 	source_group("Header Files" FILES *.h)
 ENDIF(WIN32)

@@ -52,7 +52,7 @@ typedef u128 intN;
 #ifdef NATIVE_FLOAT
 typedef long double data_t;
 #else
-typedef cpp_dec_float_50 elem_t; 
+typedef cpp_dec_float_50 data_t; 
 #endif
 
 #define MAX_N (1<<MAX_BIT)
@@ -211,6 +211,10 @@ T arrayDot(T *a1, T *a2, int size)
 
 intN BioCoeff(int n, int k);
 
+std::vector<int> pickRandomIndexInner(int range, int n);
+
+std::vector<int> pickRandomIndex(int range, int n);
+
 class Stopwatch
 {
 private:
@@ -236,3 +240,34 @@ public:
 		return _message.c_str();
 	}
 };
+
+template<class ArgType, class RowIndexType>
+class indexing_functor {
+  const ArgType &m_arg;
+  const RowIndexType &m_rowIndices;
+public:
+  typedef Eigen::Matrix<typename ArgType::Scalar,
+                 RowIndexType::SizeAtCompileTime,
+                 RowIndexType::SizeAtCompileTime,
+                 ArgType::Flags&Eigen::RowMajorBit?Eigen::RowMajor:Eigen::ColMajor,
+                 RowIndexType::MaxSizeAtCompileTime,
+                 RowIndexType::MaxSizeAtCompileTime> MatrixType;
+ 
+  indexing_functor(const ArgType& arg, const RowIndexType& row_indices)
+    : m_arg(arg), m_rowIndices(row_indices)
+  {}
+ 
+  const typename ArgType::Scalar& operator() (Eigen::Index row, Eigen::Index col) const {
+    return m_arg(m_rowIndices[row], col);
+  }
+};
+
+template <class ArgType, class RowIndexType>
+Eigen::CwiseNullaryOp<indexing_functor<ArgType,RowIndexType>, typename indexing_functor<ArgType,RowIndexType>::MatrixType>
+indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indices)
+{
+  typedef indexing_functor<ArgType,RowIndexType> Func;
+  typedef typename Func::MatrixType MatrixType;
+  return MatrixType::NullaryExpr(row_indices.size(), arg.cols(), Func(arg.derived(), row_indices));
+}
+

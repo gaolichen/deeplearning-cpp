@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 #include "node.h"
+#include "datautil.h"
 
 class Layer {
 private:
@@ -14,7 +15,7 @@ public:
         return _addUnitNode;
     }
 
-    size_t numberOfOutNodes() const {
+    virtual size_t numberOfOutNodes() const {
         return _addUnitNode ? numberOfInNodes() + 1 : numberOfInNodes();
     }
     
@@ -25,26 +26,53 @@ public:
 
 class SimpleLayer : public Layer {
 private:
-    int _numberOfNodes;
+    int _numberOfInNodes;
 public:
-    SimpleLayer(int numberOfNodes, bool addUnitNode) : Layer(addUnitNode) {
-        _numberOfNodes = numberOfNodes;
+    SimpleLayer(int numberOfInNodes, bool addUnitNode) : Layer(addUnitNode) {
+        _numberOfInNodes = numberOfInNodes;
     }
     
     virtual size_t numberOfInNodes() const {
-        return _numberOfNodes;
+        return _numberOfInNodes;
     }
 };
 
+struct DataTransformer {
+    int column;
+    dataTransformFun fun;
+};
+
 class FirstLayer : public SimpleLayer {
+private:
+    std::vector<std::vector<int> > _crossFeatures;
+    std::vector<DataTransformer> _transformers;
 public:
-    FirstLayer(int numberOfNodes, bool addUnitNode = true) : SimpleLayer(numberOfNodes, addUnitNode) {
+    FirstLayer(int numberOfInNodes, bool addUnitNode = true) : SimpleLayer(numberOfInNodes, addUnitNode) {
+    }
+    
+    virtual size_t numberOfOutNodes() const {
+        if (hasUnitNode()) {
+            return numberOfInNodes() + 1 + _crossFeatures.size() + _transformers.size();
+        } else {
+            return numberOfInNodes() + _crossFeatures.size() + _transformers.size();
+        }
     }
     
     virtual Matrix eval(const Matrix& input) const;
     
     virtual Array gDiff(const Matrix& z) const {
         throw DPLException("should not call FirstLayer.gDiff function.");
+    }
+    
+    void addCrossFeature(std::vector<int> columns) {
+        _crossFeatures.push_back(columns);
+    }
+    
+    void addCustomFeature(int column, dataTransformFun trans) {
+        DataTransformer dt;
+        dt.column = column;
+        dt.fun = trans;
+        _transformers.push_back(dt);
     }
 };
 

@@ -1,21 +1,25 @@
 #include "layer.h"
+#include "datautil.h"
 
 Matrix FirstLayer::eval(const Matrix& input) const {
     if (input.cols() != numberOfInNodes()) {
         throw DPLException("FirstLayer::eval: invalid input matrix size.");
     }
     
-    Matrix ret;
-    if (!hasUnitNode()) {
-        ret = input.transpose();
-    } else {
-        // add one row
-        ret.resize(input.cols() + 1, input.rows());
-        ret.block(0, 0, 1, input.rows()) = Matrix::Constant(1, input.rows(), 1.0);
-        ret.block(1, 0, input.cols(), input.rows()) = input.transpose();
+    Matrix ret = input;
+    if (hasUnitNode()) {
+        DataUtil::appendColumnProduct(ret, std::vector<int>());
     }
     
-    return ret;
+    for (int i = 0; i < _transformers.size(); i++) {
+        DataUtil::appendCustomColumn(ret, _transformers[i].column, _transformers[i].fun);
+    }
+    
+    for (int i = 0; i < _crossFeatures.size(); i++) {
+        DataUtil::appendColumnProduct(ret, _crossFeatures[i]);
+    }
+    
+    return ret.transpose();
 }
 
 SimpleHiddenLayer::SimpleHiddenLayer(std::string activation, int numberOfNodes, bool addUnitNode)
@@ -105,24 +109,45 @@ data_t RegressionOutputLayer::loss(const Matrix& x, const Matrix& y) const {
 
 Matrix ClassificationOutputLayer::delta(const Matrix& x, const Matrix& y) const {
     if (x.rows() != y.rows() || x.cols() != y.cols()) {
-        throw DPLException("matrix size of x and y not match.");
+        throw DPLException("ClassificationOutputLayer::delta: matrix size of x and y not match.");
+    }
+    if (x.cols() != numberOfOutNodes()) {
+        throw DPLException("ClassificationOutputLayer::delta: number of columns in x is incorrect.");
     }
     return (x - y) / y.rows();
 }
     
 data_t ClassificationOutputLayer::loss(const Matrix& x, const Matrix& y) const {
-    // TODO
-    return 0.0;
-//    return (x - y).squaredNorm() / y.rows();
+    if (x.rows() != y.rows() || x.cols() != y.cols()) {
+        throw DPLException("ClassificationOutputLayer::loss: matrix size of x and y not match.");
+    }
+    if (x.cols() != numberOfOutNodes()) {
+        throw DPLException("ClassificationOutputLayer::loss: number of columns in x is incorrect.");
+    }
+    
+    data_t ret = .0;
+    for (int i = 0; i < x.rows(); i++) {
+        for (int j = 0; j < x.cols(); j++) {
+            ret -= (1 - y(i, j)) * log(1 - x(i, j)) + y(i, j) * log(x(i, j));
+        }
+    }
+    return ret / x.rows();
 }
 
 Matrix SoftmaxOutputLayer::eval(const Matrix& input) const {
+    if (input.rows() != this->numberOfInNodes()) {
+        throw DPLException("SoftmaxOutputLayer::eval: invalid input matrix size.");
+    }
     Matrix ret(input.cols(), input.rows());
     for (int i = 0; i < input.cols(); i++) {
-        Array exps = input.col(i).array().exp();
-        data_t num = exps.sum();
+//        Array exps = input.col(i).array().exp();
+//        data_t num = exps.sum();
+//        for (int j = 0; j < input.rows(); j++) {
+//            ret(i, j) = exps(j) / num;
+//        }
+        Array tmp = (input.col(i).array() - input.col(i).maxCoeff()).exp();
         for (int j = 0; j < input.rows(); j++) {
-            ret(i, j) = exps(j) / num;
+            ret(i, j) = tmp(j) / tmp.sum();
         }
     }
     
@@ -131,15 +156,49 @@ Matrix SoftmaxOutputLayer::eval(const Matrix& input) const {
 
 Matrix SoftmaxOutputLayer::delta(const Matrix& x, const Matrix& y) const {
     if (x.rows() != y.rows() || x.cols() != y.cols()) {
-        throw DPLException("matrix size of x and y not match.");
+        throw DPLException("SoftmaxOutputLayer::delta: matrix size of x and y not match.");
     }
-    // TODO
-    return (x - y) / y.rows();
+    if (x.cols() != numberOfOutNodes()) {
+        throw DPLException("SoftmaxOutputLayer::delta: number of columns in x is incorrect.");
+    }
+    
+    Array arr(x.rows(), x.cols());
+    for (int i = 0; i < x.rows(); i++) {
+        for (int j = 0; j < x.cols(); j++) {
+            if (std::abs(y(i, j) - 1) < EPS) {
+                arr(i, j) = 1.0;
+            } else if (std::abs(y(i, j)) < EPS) {
+                arr(i, j) = -x(i, j) / (1 - x(i, j));
+            } else {
+                throw DPLException("SoftmaxOutputLayer::delta: the value labels can only be 0 or 1.");
+            }
+        }
+    }
+    
+    Matrix rSum = arr.rowwise().sum().matrix().asDiagonal();
+    return (rSum * x - arr.matrix())/x.rows();
 }
     
 data_t SoftmaxOutputLayer::loss(const Matrix& x, const Matrix& y) const {
-    // TODO
-    return 0.0;
+    if (x.rows() != y.rows() || x.cols() != y.cols()) {
+        std::cout << x.rows() << ' ' << x.cols() << std::endl;
+        std::cout << y.rows() << ' ' << y.cols() << std::endl;
+        throw DPLException("SoftmaxOutputLayer::loss: matrix size of x and y not match.");
+    }
+    if (x.cols() != numberOfOutNodes()) {
+        throw DPLException("SoftmaxOutputLayer::loss: number of columns in x is incorrect.");
+    }
+    data_t ret = .0;
+    for (int i = 0; i < x.rows(); i++) {
+        for (int j = 0; j < x.cols(); j++) {
+            if (std::abs(y(i, j)) < EPS) {
+                ret -= (1 - y(i, j)) * log(1 - x(i, j));
+            } else {
+                ret -= y(i, j) * log(x(i, j)); 
+            }
+        }
+    }
+    return ret / x.rows();
 }
 /*
 CustomLayer::CustomLayer(bool isLastLayer) {

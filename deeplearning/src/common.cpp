@@ -104,6 +104,39 @@ intN BioCoeff(int n, int k)
 	return ret;
 }
 
+std::vector<int> pickRandomIndexInner(int range, int n) {
+    std::vector<int> ret(n);
+    int beginIndex = 0;
+    while (beginIndex < n) {
+        for (int i = beginIndex; i < n; i++) {
+            ret[i] = random64(range - 1);
+        }
+        std::sort(ret.begin(), ret.end());
+        beginIndex = std::unique(ret.begin(), ret.end()) - ret.begin();
+    }
+    return ret;
+}
+
+std::vector<int> pickRandomIndex(int range, int n) {
+    if (n + n < range) {
+        return pickRandomIndexInner(range, n);
+    } else {
+        std::vector<int> v = pickRandomIndexInner(range, range - n);
+        std::vector<int> ret(n);
+        int j = 0, k = 0;
+        for (int i = 0; i < range; i++) {
+            if (j < v.size() && i == v[j]) {
+                j++;
+                continue;
+            } else {
+                ret[k++] = i;
+            }
+        }
+        
+        return ret;
+    }
+}
+
 Stopwatch::Stopwatch()
 {
     start = clock();
