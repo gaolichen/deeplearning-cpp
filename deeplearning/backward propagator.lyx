@@ -228,7 +228,7 @@ At each node, there an activation
  To use matrix notation, let us suppose 
 \begin_inset Formula 
 \[
-x_{i}^{(l)m}=g_{i}^{(l)j}\left(z_{j}^{(a)m}\right),\quad g_{i}^{(l)j}\propto\delta_{i}^{j}.
+x_{i}^{(l)m}=g_{i}^{(l)}\left(z^{(l)m}\right).
 \]
 
 \end_inset
@@ -245,7 +245,7 @@ Now we have
  And 
 \begin_inset Formula 
 \[
-x^{(1)m}=g^{(1)j}\left(z_{j}^{(1)m}\right)=g^{(1)j}\left(\Theta_{j}^{(0)k}x_{k}^{(0)m}\right)=g^{(1)}\circ\Theta^{(0)}x^{(0)m}
+x^{(1)m}=g^{(1)}\left(z^{(1)m}\right)=g^{(1)}\left(\Theta^{(0)}x^{(0)m}\right)=g^{(1)}\circ\Theta^{(0)}x^{(0)m}
 \]
 
 \end_inset
@@ -253,7 +253,7 @@ x^{(1)m}=g^{(1)j}\left(z_{j}^{(1)m}\right)=g^{(1)j}\left(\Theta_{j}^{(0)k}x_{k}^
 
 \begin_inset Formula 
 \[
-x^{(2)m}=g^{(2)j}\left(z_{j}^{(2)m}\right)=g^{(2)j}\left(\Theta_{j}^{(1)k}x_{k}^{(1)m}\right)=g^{(2)}\circ\Theta^{(1)}x^{(1)m}=g^{(2)}\circ\Theta^{(1)}g^{(1)}\circ\Theta^{(0)}x^{(0)m}
+x^{(2)m}=g^{(2)}\left(z^{(2)m}\right)=g^{(2)}\left(\Theta^{(1)}x^{(1)m}\right)=g^{(2)}\circ\Theta^{(1)}x^{(1)m}=g^{(2)}\circ\Theta^{(1)}g^{(1)}\circ\Theta^{(0)}x^{(0)m}
 \]
 
 \end_inset
@@ -279,12 +279,14 @@ Now consider the backward propagator.
  We want to find 
 \begin_inset Formula 
 \begin{align*}
-\frac{\partial J_{\Theta}}{\partial\Theta_{i}^{(a)j}} & =\frac{\partial}{\partial\Theta_{i}^{(a)j}}J\left(x^{(L)1},y^{1},x^{(L)2},y^{2},\dots,x^{(L)M},y^{M}\right)\\
+\frac{\partial J_{\Theta}}{\partial\Theta_{i}^{(l)j}} & =\frac{\partial}{\partial\Theta_{i}^{(a)j}}J\left(x^{(L)1},y^{1},x^{(L)2},y^{2},\dots,x^{(L)M},y^{M}\right)\\
  & =\frac{\partial}{\partial\Theta_{i}^{(a)j}}J\left[g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(a)}x^{(a)m},y^{m}\right]\\
  & =\frac{\partial}{\partial\Theta_{i}^{(a)j}}J\left[g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(a+1)}g^{(a+1)}\circ z^{(a+1)m},y^{m}\right]\\
- & =\frac{\partial}{\partial z_{i}^{(a+1)m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\Theta^{(a+1)}g^{(a+1)}\right]x_{j}^{(a)m}\\
- & \equiv D_{m}^{(a+1)i}x_{j}^{(a)m}\\
- & =x^{(a)m}D_{m}^{(a+1)}
+ & =\frac{\partial}{\partial z_{k}^{(l+1)m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\Theta^{(l+1)}g^{(l+1)}\right]\frac{\partial z_{k}^{(l+1)m}}{\partial\Theta_{i}^{(l)j}}\\
+ & \equiv D_{m}^{(l+1)k}\frac{\partial\Theta_{k}^{(l)h}x_{h}^{(l)m}}{\partial\Theta_{i}^{(l)j}}\\
+ & =D_{m}^{(l+1)k}\delta_{k}^{i}\delta_{j}^{h}x_{h}^{(l)m}\\
+ & =D_{m}^{(l+1)i}x_{j}^{(l)m}\\
+ & =\left(x^{(l)}D^{(l+1)}\right)_{ji}
 \end{align*}
 
 \end_inset
@@ -292,7 +294,7 @@ Now consider the backward propagator.
 where 
 \begin_inset Formula 
 \[
-D_{m}^{(l)i}\equiv\frac{\partial}{\partial z_{i}^{(l)m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\Theta^{(l)}g^{(l)}\left(z^{(l)}\right)\right]\Big|_{z^{(a)m}}
+D_{m}^{(l)i}\equiv\frac{\partial}{\partial z_{i}^{(l)m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\Theta^{(l)}g^{(l)}\left(z^{(l)}\right)\right]\Big|_{z^{(l)m}}
 \]
 
 \end_inset
@@ -308,20 +310,39 @@ Now
  & =\frac{\partial}{\partial{z_{i}^{(l-1)}}^{m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(l-1)}g^{(l-1)}\left(z^{(l-1)\alpha}\right)\right]\\
  & =\frac{\partial}{\partial{z_{j}^{(l)}}^{m}}\left[J\circ g^{(L)}\circ\Theta^{(L-1)}g^{(L-1)}\circ\cdots\circ\Theta^{(l)}g^{(l)}\circ z^{(l)}\right]\frac{\partial z_{j}^{(l)m}}{\partial z_{i}^{(l-1)m}}\\
  & =D_{m}^{(l)j}\frac{\partial\left(\Theta^{(l-1)}g^{(l-1)}\left(z^{(l-1)}\right)\right)_{j}}{\partial z_{i}^{(l-1)m}}\\
- & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\frac{\partial\left(g_{k}^{(l-1)h}\left(z_{h}^{(a-1)m}\right)\right)}{\partial z_{i}^{(l-1)m}}\\
- & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\left(g^{(l-1)}\right)_{k}^{\prime h}\delta_{h}^{i}\Big|_{z^{(a-1)m}}\\
- & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\left(g^{(l-1)}\right)_{k}^{\prime i}\Big|_{z^{(a-1)m}}\\
- & =D_{m}^{(l)j}\Theta_{j}^{(l-1)i}\left(g^{(l-1)}\right)^{\prime}\Big|_{z_{i}^{(a-1)m}}\\
+ & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\frac{\partial\left(g_{k}^{(l-1)}\left(z^{(l-1)m}\right)\right)}{\partial z_{i}^{(l-1)m}}\\
+ & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\left(\partial^{i}g_{k}^{(l-1)}\right)\Big|_{z^{(l-1)m}}
+\end{align*}
+
+\end_inset
+
+Now assume for hidden layers 
+\begin_inset Formula $g_{k}^{\left(l\right)}$
+\end_inset
+
+ only depends on 
+\begin_inset Formula $z_{k}^{(l)m}$
+\end_inset
+
+, then 
+\begin_inset Formula 
+\[
+\left(\partial^{i}g_{k}^{(l-1)}\right)\Big|_{z^{(a-1)m}}=\delta_{k}^{i}\left(g_{k}^{(l-1)\prime}\right)\Big|_{z_{i}^{(l-1)m}}
+\]
+
+\end_inset
+
+ So 
+\begin_inset Formula 
+\begin{align*}
+{D_{m}^{(l-1)}}^{i} & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\delta_{k}^{i}\left(g_{k}^{(l-1)\prime}\right)\Big|_{z_{i}^{(l-1)m}}\\
+ & =D_{m}^{(l)j}\Theta_{j}^{(l-1)i}\left(g^{(l-1)}\right)^{\prime}\Big|_{z_{i}^{(l-1)m}}\\
  & =\left(D^{(l)}\Theta^{(a-1)}\right).*\left(g^{(l-1)}\right)^{\prime}
 \end{align*}
 
 \end_inset
 
-where we have used 
-\begin_inset Formula $g_{k}^{i}\propto\delta_{k}^{i}$
-\end_inset
-
-, and 
+where 
 \begin_inset Formula 
 \[
 \left[\left(g^{(l)}\right)^{\prime}\right]_{m}^{i}\equiv\left(g^{(l)}\right)^{\prime}\Big|_{z_{i}^{(l)m}}
@@ -338,16 +359,21 @@ The dimension of
 \end_inset
 
 .
- We have 
+ For the output layer, we need to compute 
+\begin_inset Formula $D^{(L)}$
+\end_inset
+
+, 
 \begin_inset Formula 
 \begin{align*}
 D_{m}^{(L)i} & \equiv\frac{\partial}{\partial z_{i}^{(L)m}}\left[J\circ g^{(L)}\left(z^{(L)}\right)\right]\\
- & =\left(\partial_{m}J\right)g^{(L)\prime}\Big|_{z_{j}^{(L)m}}
+ & =\left(\partial_{x_{j}^{m}}J\right)\frac{\partial g_{j}^{(L)}\left(z^{(L)m}\right)}{\partial z_{i}^{(L)m}}\Big|_{z^{(L)m}}
 \end{align*}
 
 \end_inset
 
- For log loss function
+Consider the classification case.
+ The loss function
 \begin_inset Formula 
 \[
 J=-\frac{1}{M}\sum_{m}\sum_{i}\left[\left(1-y_{i}^{m}\right)\log\left(1-x_{i}^{m}\right)+y_{i}^{m}\log x_{i}^{m}\right]
@@ -360,24 +386,97 @@ J=-\frac{1}{M}\sum_{m}\sum_{i}\left[\left(1-y_{i}^{m}\right)\log\left(1-x_{i}^{m
 \begin{align*}
 \partial_{x_{i}^{m}}J & =-\frac{1}{M}\left(-\frac{\left(1-y_{i}^{m}\right)}{1-x_{i}^{m}}+\frac{y_{i}^{m}}{x_{i}^{m}}\right)\\
  & =-\frac{1}{M}\left(\frac{-\left(1-y_{i}^{m}\right)x_{i}^{m}+y_{i}^{m}\left(1-x_{i}^{m}\right)}{x_{i}^{m}\left(1-x_{i}^{m}\right)}\right)\\
- & =-\frac{1}{M}\frac{y_{i}^{m}-x_{i}^{m}}{x_{i}^{m}\left(1-x_{i}^{m}\right)}
+ & =-\frac{1}{M}\frac{y_{i}^{m}-x_{i}^{m}}{x_{i}^{m}\left(1-x_{i}^{m}\right)}.
+\end{align*}
+
+\end_inset
+
+ For activation, if there is only one output node, we have
+\begin_inset Formula 
+\[
+\frac{\partial g_{j}^{(L)}\left(z^{(L)m}\right)}{\partial z_{i}^{(L)m}}=\left(\frac{1}{1+e^{-z}}\right)^{\prime}=\frac{e^{-z}}{\left(1+e^{-z}\right)^{2}}=x^{2}\left(1/x-1\right)=x-x^{2}
+\]
+
+\end_inset
+
+ so for classification of one output node.
+\begin_inset Formula 
+\[
+D_{m}^{(L)j}=\frac{1}{M}\left(x_{i}^{m}-y_{i}^{m}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Softmax
+\end_layout
+
+\begin_layout Standard
+For multi-class classification, the activation is the softmax equation
+\begin_inset Formula 
+\[
+g_{j}\left(z_{m}\right)=p\left(y=j|z^{m}\right)=\frac{e^{z_{j}^{m}}}{\sum_{k}e^{z_{k}^{m}}},\quad z_{i}^{m}=\Theta_{i}^{(L-1)j}x_{j}^{(L-1)m}
+\]
+
+\end_inset
+
+ So 
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial g_{j}^{(L)}\left(z^{(L)m}\right)}{\partial z_{i}^{(L)m}} & =\frac{\partial}{\partial z_{i}^{m}}\left(\frac{e^{z_{j}^{m}}}{\sum_{k}e^{z_{k}^{m}}}\right)\\
+ & =\delta_{j}^{i}\frac{e^{z_{j}^{m}}}{\sum_{k}e^{z_{k}^{m}}}-\frac{e^{z_{j}^{m}}e^{z_{i}^{m}}}{\left(\sum_{k}e^{z_{k}^{m}}\right)^{2}}\\
+ & =\delta_{j}^{i}g_{j}\left(z^{m}\right)-g_{i}g_{j}\\
+ & =\delta_{j}^{i}x_{j}^{m}-x_{i}^{m}x_{j}^{m}
+\end{align*}
+
+\end_inset
+
+ Let the nubmer of nodes in the output layer is 
+\begin_inset Formula $K$
+\end_inset
+
+, then 
+\begin_inset Formula 
+\begin{align*}
+D_{m}^{(L)i} & =\left(\partial_{x_{j}^{m}}J\right)\frac{\partial g_{j}^{(L)}\left(z^{(L)m}\right)}{\partial z_{i}^{(L)m}}\Big|_{z^{(L)m}}\\
+ & =\left(\partial_{x_{j}^{m}}J\right)\left(\delta_{j}^{i}x_{j}^{m}-x_{i}^{m}x_{j}^{m}\right)\\
+ & =\left(\partial_{x_{i}^{m}}J\right)x_{i}^{m}-\sum_{j=1}^{K}\left(\partial_{x_{j}^{m}}J\right)x_{i}^{m}x_{j}^{m}\\
+ & =-\frac{1}{M}\frac{y_{i}^{m}-x_{i}^{m}}{x_{i}^{m}\left(1-x_{i}^{m}\right)}x_{i}^{m}+\frac{1}{M}\sum_{j}\frac{y_{j}^{m}-x_{j}^{m}}{x_{j}^{m}\left(1-x_{j}^{m}\right)}x_{i}^{m}x_{j}^{m}\\
+ & =-\frac{1}{M}\frac{y_{i}^{m}-x_{i}^{m}}{\left(1-x_{i}^{m}\right)}+\frac{1}{M}\sum_{j=1}^{K}\frac{y_{j}^{m}-x_{j}^{m}}{\left(1-x_{j}^{m}\right)}x_{i}^{m}\\
+ & =\frac{1}{M}\left(x_{i}^{m}-y_{i}^{m}\right)+\frac{1}{M}\sum_{j\neq i}\frac{y_{j}^{m}-x_{j}^{m}}{\left(1-x_{j}^{m}\right)}x_{i}^{m}
 \end{align*}
 
 \end_inset
 
 
 \begin_inset Formula 
-\[
-g^{(L)\prime}=\left(\frac{1}{1+e^{-z}}\right)^{\prime}=\frac{e^{-z}}{\left(1+e^{-z}\right)^{2}}=x^{2}\left(1/x-1\right)=x-x^{2}
-\]
+\begin{align*}
+\frac{1}{M}\sum_{j\neq i}\frac{y_{j}^{m}-x_{j}^{m}}{\left(1-x_{j}^{m}\right)}x_{i}^{m} & =\frac{1}{M}\sum_{j\neq i}\frac{y_{j}^{m}-x_{j}^{m}}{\left(1-x_{j}^{m}\right)}\left(1-x_{j}-\sum_{k\neq i,j}x_{k}^{m}\right)\\
+ & =\frac{1}{M}\sum_{j\neq i}\left(y_{j}^{m}-x_{j}^{m}\right)\left(1-\frac{\sum_{k\neq i,j}x_{k}^{m}}{\sum_{k\neq j}x_{k}^{m}}\right)\\
+ & =\frac{1}{M}\left(x_{i}^{m}-y_{i}^{m}\right)-\frac{1}{M}\sum_{j\neq i}\left(y_{j}^{m}-x_{j}^{m}\right)\frac{\sum_{k\neq i,j}x_{k}^{m}}{\sum_{k\neq j}x_{k}^{m}}
+\end{align*}
 
 \end_inset
 
- so 
+
+\end_layout
+
+\begin_layout Standard
+For 
+\begin_inset Formula $K=3$
+\end_inset
+
+, 
 \begin_inset Formula 
-\[
-D_{m}^{(L)j}=\frac{1}{M}\left(x_{i}^{m}-y_{i}^{m}\right)
-\]
+\begin{align*}
+\sum_{j\neq i}\frac{y_{j}^{m}-x_{j}^{m}}{\left(1-x_{j}^{m}\right)}x_{i}^{m} & =\frac{y_{2}-x_{2}}{\left(1-x_{2}\right)}x_{1}+\frac{y_{3}-x_{3}}{\left(1-x_{3}\right)}x_{1}\\
+ & =\frac{\left(y_{2}-x_{2}\right)\left(1-x_{3}\right)+\left(y_{3}-x_{3}\right)\left(1-x_{2}\right)}{\left(1-x_{2}\right)\left(1-x_{3}\right)}x_{1}\\
+ & =\frac{y_{2}+y_{3}-2\left(x_{2}+x_{3}\right)-y_{2}x_{3}-y_{3}x_{2}+2x_{2}x_{3}}{\left(1-x_{2}\right)\left(1-x_{3}\right)}x_{1}\\
+ & =
+\end{align*}
 
 \end_inset
 
