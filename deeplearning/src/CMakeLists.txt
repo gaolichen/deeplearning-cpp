@@ -61,6 +61,9 @@ SET(DPL_MAIN_SRCS
 file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/*.cpp)
 
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR} eigen)
+INCLUDE_DIRECTORIES (${Python2_INCLUDE_DIRS} ${Python2_NumPy_INCLUDE_DIRS})
+#target_link_libraries(dpl Python2::Python Python2::NumPy)
+
 
 #find_package(Boost 1.70)
 
@@ -71,13 +74,13 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
     add_library (dpllib STATIC ${DPL_LIB_SRCS})
     add_executable (dpl ${DPL_MAIN_SRCS})
-    target_link_libraries(dpl ${Boost_LIBRARIES} dpllib)
+    target_link_libraries(dpl ${Boost_LIBRARIES} dpllib Python2::Python Python2::NumPy)
 
     # the test code depends on c++ 11. Support of c++0x is not enough.
     # if the compiler does not support c++11, do not build test code.
     if(NOT WIN32)
         add_executable(dpltest ${TEST_SRCS})
-        target_link_libraries(dpltest ${Boost_LIBRARIES} dpllib)
+        target_link_libraries(dpltest ${Boost_LIBRARIES} dpllib dpllib Python2::Python Python2::NumPy)
         add_test(NAME bstest COMMAND bstest)
     endif()
 endif()

@@ -11,6 +11,8 @@
 #include "test.h"
 #include "model.h"
 #include "datautil.h"
+#include "matplotlibcpp.h"
+namespace plt = matplotlibcpp;
 
 // test suite
 BOOST_FIXTURE_TEST_SUITE(Demo_suite, SimpleTestFixture, * utf::label("UnityStartSystem"))
@@ -220,15 +222,18 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
 //    std::cout << "y=" << std::endl << y << std::endl << std::endl;
     
     HyperParameter params = {
-        .epochs = 500,
+        .epochs = 5000,
         .batch = 100, 
-        .learningRate = 0.05,
+        .learningRate = 0.01,
         .lambda = 0.001,
     };
     
     Stopwatch watch;
     Vector loss = model.train(data, y, params);
+    std::vector<data_t> vec(loss.data(), loss.data() + loss.size());
     double sec = watch.Elapsed();
+    plt::plot(DataUtil::smooth(vec, 40));
+    plt::show();
     std::cout << "training loss=" << loss.transpose() << std::endl;
     for (int i = 0; i < model.weights().size(); i++) {
         std::cout << "weight " << i << std::endl;

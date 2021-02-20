@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <sstream>
 #include "common.h"
+#include "matplotlibcpp.h"
 using namespace std;
+namespace plt = matplotlibcpp;
 
 void TestMatrix() {
     Matrix v3 = Matrix::Random(10, 1);
@@ -56,7 +58,10 @@ void TestIndexing() {
 int main(int argc, char* argv[])
 {
     std::cout << "deep learning..." << std::endl;
-    TestArray();
+    plt::plot({1,3,2,4});
+    plt::show();
+
+//    TestArray();
 //    TestIndexing();
 	return 0;
 }

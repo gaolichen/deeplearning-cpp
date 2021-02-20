@@ -21,3 +21,18 @@ void DataUtil::appendCustomColumn(Matrix& mat, int column, dataTransformFun fun)
         mat(i, lastCol) = fun(mat(i, column));
     }
 }
+
+std::vector<data_t> DataUtil::smooth(const std::vector<data_t>& data, int range) {
+    std::vector<data_t> ret(data.size(), 0.0);
+    for (int i = 0; i < data.size(); i++) {
+        int cnt = 0;
+        for (int j = -range; j <= range; j++) {
+//        for (int j = -range; j <= 0; j++) {
+            if (j + i < 0 || j + i >= data.size()) continue;
+            ret[i] += data[i + j];
+            cnt++;
+        }
+        ret[i] /= cnt;
+    }
+    return ret;
+}
