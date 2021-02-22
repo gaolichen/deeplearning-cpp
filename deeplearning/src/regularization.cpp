@@ -10,6 +10,14 @@ Regularization* Regularization::create(std::string name) {
     }
 }
 
+data_t Regularization::complixity(const std::vector<Matrix>& weights) {
+    data_t ret = .0;
+    for (int i = 0; i < weights.size(); i++) {
+        ret += complixity(weights[i]);
+    }
+    return ret;
+}
+
 data_t L2::complixity(const Matrix& weight) {
     return weight.squaredNorm();
 }

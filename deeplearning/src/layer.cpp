@@ -2,24 +2,35 @@
 #include "datautil.h"
 
 Matrix FirstLayer::eval(const Matrix& input) const {
-    if (input.cols() != numberOfInNodes()) {
-        throw DPLException("FirstLayer::eval: invalid input matrix size.");
+    int rows = numberOfOutNodes();
+    Matrix ret(rows, input.rows());
+    for (int i = 0; i < input.rows(); i++) {
+        for (int j = 0; j < _numerics.size(); j++) {
+            ret(j, i) = _numerics[j]->evalNumeric(input.row(i));
+        }
+        if (hasUnitNode()) {
+            ret(_numerics.size(), i) = 1.0;
+        }
     }
-    
-    Matrix ret = input;
-    if (hasUnitNode()) {
-        DataUtil::appendColumnProduct(ret, std::vector<int>());
+    return ret;    
+}
+
+Onehot FirstLayer::evalDiscrete(const Matrix& input) const {
+    Onehot ret(_discretes.size(), input.rows(), false);
+    if (_discretes.size() == 0) {
+        return ret;
     }
-    
-    for (int i = 0; i < _transformers.size(); i++) {
-        DataUtil::appendCustomColumn(ret, _transformers[i].column, _transformers[i].fun);
+    for (int j = 0; j < _discretes.size(); j++) {
+        ret.range(j) = _discretes[j]->range();
     }
-    
-    for (int i = 0; i < _crossFeatures.size(); i++) {
-        DataUtil::appendColumnProduct(ret, _crossFeatures[i]);
+//    std::cout << "FirstLayer::evalDiscrete input.row(0)=" << input.row(0) << std::endl;
+    for (int i = 0; i < input.rows(); i++) {
+        for (int j = 0; j < _discretes.size(); j++) {
+            ret(j, i) = _discretes[j]->evalDiscrete(input.row(i));
+        }
     }
-    
-    return ret.transpose();
+//    std::cout << "ret.data() = " << std::endl << ret.data() << std::endl;
+    return ret;
 }
 
 SimpleHiddenLayer::SimpleHiddenLayer(std::string activation, int numberOfNodes, bool addUnitNode)

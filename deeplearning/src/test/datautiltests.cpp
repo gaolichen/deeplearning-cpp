@@ -34,4 +34,64 @@ BOOST_DATA_TEST_CASE(appendColumnProduct_emptycolumn_test, bdata::random(2, 10) 
     }
 }
 
+BOOST_DATA_TEST_CASE(randomIndex_test, bdata::random(15, 16) ^ bdata::xrange(20), range, index)
+{
+    std::vector<int> v1 = DataUtil::randomIndex(range);
+    std::vector<int> v2 = DataUtil::randomIndex(range);
+    BOOST_TEST_REQUIRE(v1.size() == range);
+    BOOST_TEST_REQUIRE(v2.size() == range);
+    BOOST_TEST_REQUIRE(CompareVector(v1, v2) != 0);
+    std::sort(v1.begin(), v1.end());
+    std::sort(v2.begin(), v2.end());
+    BOOST_TEST_REQUIRE(CompareVector(v1, v2) == 0);
+    for (int i = 0; i < v1.size(); i++) {
+        BOOST_TEST_REQUIRE(v1[i] == i);
+    }
+}
+
+BOOST_DATA_TEST_CASE(randomRowShuffle, bdata::random(15, 16) ^ bdata::random(2, 7) ^ bdata::xrange(20), rows, cols, index)
+{
+    Matrix mat = Matrix::Random(rows, cols);
+    Matrix mat2 = DataUtil::randomRowShuffle(mat);
+    BOOST_TEST_REQUIRE(mat.rows() == mat2.rows());
+    BOOST_TEST_REQUIRE(mat.cols() == mat2.cols());
+    
+    for (int i = 0; i < mat.rows(); i++) {
+        bool found = false;
+        for (int j = 0; j < mat2.rows(); j++) {
+            if (mat2.row(j) == mat.row(i)) {
+                found = true;
+                break;
+            }
+        }
+        BOOST_TEST_INFO("i=" << i);
+        BOOST_TEST_REQUIRE(found);
+    }
+}
+
+BOOST_DATA_TEST_CASE(randomSubIndex, bdata::random(15, 16) ^ bdata::random(2, 7) ^ bdata::xrange(2), range, setSize, index)
+{
+//    IndexType it(NULL, 0);
+//    std::cout << it.size() << std::endl;
+    std::cout << range << ' ' << setSize << std::endl;
+    std::vector<int> indices = pickRandomIndex(range, setSize);
+    IndexType it(&indices[0], indices.size());
+//    std::cout << "it=" << it << std::endl;
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+// test suite
+BOOST_FIXTURE_TEST_SUITE(CSVData_suite, SimpleTestFixture, * utf::disabled())
+
+BOOST_AUTO_TEST_CASE(read_test)
+{
+    CSVData csv;
+    csv.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    std::cout << csv.headers() << std::endl;
+    BOOST_TEST_REQUIRE(csv.headers().size() == csv.data().cols());
+    BOOST_TEST_REQUIRE(csv.data().rows() > 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

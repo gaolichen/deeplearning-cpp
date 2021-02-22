@@ -8,12 +8,15 @@
 #include <algorithm>
 #include <sstream>
 #include "common.h"
+#include "datautil.h"
 #include "matplotlibcpp.h"
 using namespace std;
 namespace plt = matplotlibcpp;
 
 void TestMatrix() {
     Matrix v3 = Matrix::Random(10, 1);
+    std::cout << "v3=" << v3.transpose() << std::endl;
+    v3.col(0) /= 4;    
     std::cout << "v3=" << v3.transpose() << std::endl;
     v3.resize(5, 1);
     std::cout << "after resize v3=" << v3 << std::endl;
@@ -58,10 +61,8 @@ void TestIndexing() {
 int main(int argc, char* argv[])
 {
     std::cout << "deep learning..." << std::endl;
-    plt::plot({1,3,2,4});
-    plt::show();
 
-//    TestArray();
+    TestMatrix();
 //    TestIndexing();
 	return 0;
 }

@@ -19,8 +19,8 @@ find_package(Python2 COMPONENTS Development NumPy)
 
 SET (CMAKE_BUILD_TYPE Release)
 # to use gdb enable the following two flags.
-#set(CMAKE_BUILD_TYPE Debug)
-#set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 add_subdirectory (src)
 

@@ -15,7 +15,7 @@
 namespace plt = matplotlibcpp;
 
 // test suite
-BOOST_FIXTURE_TEST_SUITE(Demo_suite, SimpleTestFixture, * utf::label("UnityStartSystem"))
+BOOST_FIXTURE_TEST_SUITE(Demo_suite, SimpleTestFixture, * utf::disabled())
 
 BOOST_AUTO_TEST_CASE(demo_random_input)
 {
@@ -24,7 +24,13 @@ BOOST_AUTO_TEST_CASE(demo_random_input)
     size_t dataSize = 100;
     size_t featureSize = 5;
     size_t hiddenLayerSize = 3;
-    model.addLayer(new FirstLayer(featureSize));
+    FirstLayer* firstLayer = new FirstLayer();
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(0));
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(1));
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(2));
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(3));
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(4));
+    model.addLayer(firstLayer);
 
     for (int i = 0; i < hiddenLayerSize; i++) {
         model.addLayer(new SimpleHiddenLayer("relu", featureSize));
@@ -44,12 +50,12 @@ BOOST_AUTO_TEST_CASE(demo_random_input)
         .lambda = 0.001,
     };
 
-    Vector loss = model.train(data, y, params);
-    std::cout << "training loss=" << loss.transpose() << std::endl;
+    model.train(data, y, params);
+    std::cout << "training loss=" << model.trainingLoss() << std::endl;
         
     RVector input = RVector::Random(featureSize);
     std::cout << "input=" << input << std::endl;
-    std::cout << "output=" << model.eval(input) << std::endl;
+    std::cout << "output=" << model.predict(input) << std::endl;
     std::cout << "demo end." << std::endl;
 }
 
@@ -61,7 +67,10 @@ BOOST_AUTO_TEST_CASE(demo_line)
     size_t featureSize = 2;
     size_t hiddenLayerSize = 0;
     std::string regularization = "L1";
-    model.addLayer(new FirstLayer(featureSize));
+    FirstLayer* firstLayer = new FirstLayer();
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(0));
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(1));
+    model.addLayer(firstLayer);
 
     for (int i = 0; i < hiddenLayerSize; i++) {
         model.addLayer(new SimpleHiddenLayer("relu", featureSize + 1));
@@ -87,9 +96,9 @@ BOOST_AUTO_TEST_CASE(demo_line)
     };
     
     Stopwatch watch;
-    Vector loss = model.train(data, y, params);
+    model.train(data, y, params);
     double sec = watch.Elapsed();
-    std::cout << "training loss=" << loss.transpose() << std::endl;
+    std::cout << "training loss=" << model.trainingLoss().transpose() << std::endl;
     for (int i = 0; i < model.weights().size(); i++) {
         std::cout << "weight " << i << std::endl;
         std::cout << model.weights()[i] << std::endl;
@@ -97,7 +106,7 @@ BOOST_AUTO_TEST_CASE(demo_line)
     
     int testcases = 20;
     Matrix input = Matrix::Random(testcases, 2);
-    Matrix output = model.eval(input);
+    Matrix output = model.predict(input);
 
     for (int i = 0; i < testcases; i++) {
         std::cout << "test " << i << std::endl;
@@ -133,11 +142,11 @@ BOOST_AUTO_TEST_CASE(demo_circle)
     std::cout << "y.size()=" << y.size() << ", y.sum()=" << y.sum() << std::endl;
     
     Model model;
-    FirstLayer* firstLayer = new FirstLayer(2);
-    firstLayer->addCrossFeature(std::vector<int>{0, 0});
-    firstLayer->addCrossFeature(std::vector<int>{1, 1});
+    FirstLayer* firstLayer = new FirstLayer();
+    firstLayer->addFeatureColumn(new NumericCrossColumn(std::vector<int> {0, 0}));
+    firstLayer->addFeatureColumn(new NumericCrossColumn(std::vector<int> {1, 1}));
     model.addLayer(firstLayer);
-
+    
     for (int i = 0; i < hiddenLayerSize; i++) {
         model.addLayer(new SimpleHiddenLayer("sigmoid", featureSize + 1));
     }
@@ -151,12 +160,12 @@ BOOST_AUTO_TEST_CASE(demo_circle)
         .lambda = 0.001,
     };
 
-    Vector loss = model.train(data, y, params);    
-    std::cout << "training loss=" << loss.transpose() << std::endl;
+    model.train(data, y, params);    
+    std::cout << "training loss=" << model.trainingLoss().transpose() << std::endl;
     
     int testcases = 20;
     Matrix input = Matrix::Random(testcases, 2);
-    Matrix output = model.eval(input);
+    Matrix output = model.predict(input);
     
     for (int i = 0; i < testcases; i++) {
         std::cout << "test " << i << std::endl; 
@@ -191,19 +200,14 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
 {
     std::cout << "runnng demo_softmax." << std::endl;
     Model model;
-    size_t dataSize = 1000;
+    size_t dataSize = 500;
     size_t featureSize = 2;
     size_t hiddenLayerSize = 0;
     std::string regularization = "L1";
     
     FirstLayer* firstLayer = new FirstLayer(featureSize);
-    //firstLayer->addCrossFeature(std::vector<int>{0, 1});
-/*    firstLayer->addCustomFeature(0, [](data_t v) {
-        return 1.0/v; 
-    });
-    firstLayer->addCustomFeature(1, [](data_t v) {
-        return 1.0/v; 
-    });*/
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(0));
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(1));
     model.addLayer(firstLayer);
 
     for (int i = 0; i < hiddenLayerSize; i++) {
@@ -217,28 +221,26 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
     for (int i = 0; i < data.rows(); i++) {
         y.row(i) = quadrant(data(i, 0), data(i, 1));
     }
-    
-//    std::cout << "data=" << std::endl << data << std::endl << std::endl;
-//    std::cout << "y=" << std::endl << y << std::endl << std::endl;
-    
+        
     HyperParameter params = {
         .epochs = 5000,
         .batch = 100, 
-        .learningRate = 0.01,
+        .learningRate = 0.05,
         .lambda = 0.001,
+        .validation_split = 0.2,
     };
     
     Stopwatch watch;
-    Vector loss = model.train(data, y, params);
-    std::vector<data_t> vec(loss.data(), loss.data() + loss.size());
+    model.train(data, y, params);
     double sec = watch.Elapsed();
-    plt::plot(DataUtil::smooth(vec, 40));
-    plt::show();
-    std::cout << "training loss=" << loss.transpose() << std::endl;
+    
     for (int i = 0; i < model.weights().size(); i++) {
         std::cout << "weight " << i << std::endl;
         std::cout << model.weights()[i] << std::endl;
     }
+    
+    std::cout << "training loss=" << model.trainingLoss().transpose() << std::endl;
+    model.plotLoss();
     
     Matrix input = Matrix::Random(20, 2);
     Matrix expected(20, 4);
@@ -246,7 +248,7 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
         expected.row(i) = quadrant(input(i, 0), input(i, 1));
     }
     
-    Matrix res = model.eval(input);
+    Matrix res = model.predict(input);
 
     for (int i = 0; i < 20; i++) {
         std::cout << "test " << i << std::endl;
@@ -265,7 +267,9 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
     size_t hiddenLayerSize = 0;
     std::string regularization = "L2";
     
-    FirstLayer* firstLayer = new FirstLayer(featureSize);
+    FirstLayer* firstLayer = new FirstLayer();
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(0));
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(1));
     model.addLayer(firstLayer);
 
     for (int i = 0; i < hiddenLayerSize; i++) {
@@ -297,9 +301,9 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
     };
     
     Stopwatch watch;
-    Vector loss = model.train(data, y, params);
+    model.train(data, y, params);
     double sec = watch.Elapsed();
-    std::cout << "training loss=" << loss.transpose() << std::endl;
+    std::cout << "training loss=" << model.trainingLoss() << std::endl;
     for (int i = 0; i < model.weights().size(); i++) {
         std::cout << "weight " << i << std::endl;
         std::cout << model.weights()[i] << std::endl;
@@ -317,7 +321,7 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
         }
     }
     
-    Matrix res = model.eval(input);
+    Matrix res = model.predict(input);
 
     for (int i = 0; i < 20; i++) {
         std::cout << "test " << i << std::endl;
@@ -327,6 +331,126 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
     std::cout << "takes " << sec << " seconds to train the model." << std::endl;
 }
 
+BOOST_AUTO_TEST_CASE(ca_house)
+{
+    CSVData csvTrain, csvTest;
+    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
+    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    
+    std::cout << csvTrain.headers() << std::endl;
+    std::cout << csvTest.headers() << std::endl;
+    
+    Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
+    Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
+//    Matrix trainData = csvTrain.data();
+//    Matrix testData = csvTest.data();
+    
+    int featureCol = csvTrain.headerIndex("\"median_income\"");
+    int labelCol = csvTrain.headerIndex("\"median_house_value\"");
+    
+    std::cout << "featureCol=" << featureCol << ", labelCol=" << labelCol << std::endl;
+    
+    data_t scaleFactor = 1000.0;
+    trainData.col(labelCol) /= scaleFactor;
+    testData.col(labelCol) /= scaleFactor;
+    
+    Model model;
+    std::string regularization = "L2";
+    
+    FirstLayer* firstLayer = new FirstLayer(1);
+    model.addLayer(firstLayer);
+
+    int hiddenLayerSize = 0;
+    for (int i = 0; i < hiddenLayerSize; i++) {
+        model.addLayer(new SimpleHiddenLayer("relu", 2));
+    }
+    model.addLayer(new RegressionOutputLayer(1));
+    model.prepare(regularization);
+    
+    HyperParameter params = {
+        .epochs = 70,
+        .batch = 100, 
+        .learningRate = 0.08    ,
+        .lambda = 0.0,
+        .validation_split = 0.2,
+    };
+    
+    model.train(trainData.col(featureCol), trainData.col(labelCol), params);
+    std::cout << model.trainingLoss().array().sqrt().transpose() << std::endl << std::endl;
+    std::cout << model.validationLoss().array().sqrt().transpose() << std::endl << std::endl;
+    std::cout << "test data loss rms= " << sqrt(model.evaluate(testData.col(featureCol), testData.col(labelCol))) << std::endl;
+    model.plotLoss(true);
+    
+}
+
+BOOST_AUTO_TEST_CASE(ca_house2)
+{
+    CSVData csvTrain, csvTest;
+    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
+    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    
+//    std::cout << csvTrain.headers() << std::endl;
+//    std::cout << csvTest.headers() << std::endl;
+    
+    Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
+    Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
+    
+    int featureCol = csvTrain.headerIndex("\"median_income\"");
+    int labelCol = csvTrain.headerIndex("\"median_house_value\"");
+    int latitudeCol = csvTrain.headerIndex("\"latitude\"");
+    int longitudeCol = csvTrain.headerIndex("\"longitude\"");
+        
+    data_t scaleFactor = 1000.0;
+    trainData.col(labelCol) /= scaleFactor;
+    testData.col(labelCol) /= scaleFactor;
+//    std::cout << "top 5 rows of trainData = " << std::endl << trainData.block(0, 0, 5, trainData.cols()) << std::endl;
+    
+    Model model;
+    std::string regularization = "L2";
+    
+    FirstLayer* firstLayer = new FirstLayer(1);
+        
+    firstLayer->addFeatureColumn(new SimpleNumericColumn(featureCol));
+    
+    data_t resolution = .4;
+    firstLayer->addFeatureColumn(
+        new DiscreteCrossColumn(
+            std::vector<DiscreteColumn*> {
+                new BucketedColumn(latitudeCol,
+                trainData.col(latitudeCol).minCoeff(),
+                trainData.col(latitudeCol).maxCoeff(), 
+                resolution), 
+                new BucketedColumn(longitudeCol,
+                trainData.col(longitudeCol).minCoeff(),
+                trainData.col(longitudeCol).maxCoeff(), 
+                resolution)
+            }
+        )
+    );
+    
+    model.addLayer(firstLayer);
+
+    int hiddenLayerSize = 0;
+    for (int i = 0; i < hiddenLayerSize; i++) {
+        model.addLayer(new SimpleHiddenLayer("relu", 2));
+    }
+    model.addLayer(new RegressionOutputLayer(1));
+    model.prepare(regularization);
+    
+    HyperParameter params = {
+        .epochs = 35,
+        .batch = 100, 
+        .learningRate = 0.04    ,
+        .lambda = 0.001,
+        .validation_split = 0.2,
+    };
+    
+    model.train(trainData, trainData.col(labelCol), params);
+    std::cout << model.trainingLoss().array().sqrt().transpose() << std::endl << std::endl;
+    std::cout << model.validationLoss().array().sqrt().transpose() << std::endl << std::endl;
+    std::cout << "test data loss rms= " << sqrt(model.evaluate(testData, testData.col(labelCol))) << std::endl;
+    model.plotLoss(true);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()

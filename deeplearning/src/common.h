@@ -70,9 +70,11 @@ typedef i64 count_t;
 #endif
 
 typedef Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic> Matrix;
+typedef Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> MatrixI;
 typedef Eigen::Matrix<data_t, Eigen::Dynamic, 1> Vector;
 typedef Eigen::Matrix<data_t, 1, Eigen::Dynamic> RVector;
 typedef Eigen::Array<data_t, Eigen::Dynamic, Eigen::Dynamic> Array;
+typedef Eigen::PermutationMatrix<Eigen::Dynamic,Eigen::Dynamic> PermutationMatrix;
 enum LogLevel {Info = 0, Warning = 1, Error = 2, Off = 100 };
 
 extern double Pi;
@@ -240,34 +242,4 @@ public:
 		return _message.c_str();
 	}
 };
-
-template<class ArgType, class RowIndexType>
-class indexing_functor {
-  const ArgType &m_arg;
-  const RowIndexType &m_rowIndices;
-public:
-  typedef Eigen::Matrix<typename ArgType::Scalar,
-                 RowIndexType::SizeAtCompileTime,
-                 RowIndexType::SizeAtCompileTime,
-                 ArgType::Flags&Eigen::RowMajorBit?Eigen::RowMajor:Eigen::ColMajor,
-                 RowIndexType::MaxSizeAtCompileTime,
-                 RowIndexType::MaxSizeAtCompileTime> MatrixType;
- 
-  indexing_functor(const ArgType& arg, const RowIndexType& row_indices)
-    : m_arg(arg), m_rowIndices(row_indices)
-  {}
- 
-  const typename ArgType::Scalar& operator() (Eigen::Index row, Eigen::Index col) const {
-    return m_arg(m_rowIndices[row], col);
-  }
-};
-
-template <class ArgType, class RowIndexType>
-Eigen::CwiseNullaryOp<indexing_functor<ArgType,RowIndexType>, typename indexing_functor<ArgType,RowIndexType>::MatrixType>
-indexing(const Eigen::MatrixBase<ArgType>& arg, const RowIndexType& row_indices)
-{
-  typedef indexing_functor<ArgType,RowIndexType> Func;
-  typedef typename Func::MatrixType MatrixType;
-  return MatrixType::NullaryExpr(row_indices.size(), arg.cols(), Func(arg.derived(), row_indices));
-}
 

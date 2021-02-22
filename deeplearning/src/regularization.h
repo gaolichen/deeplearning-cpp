@@ -5,6 +5,8 @@ class Regularization {
 public:
     virtual data_t complixity(const Matrix& weight) = 0;
     
+    data_t complixity(const std::vector<Matrix>& weights);
+    
     virtual Matrix diff(const Matrix& weight) = 0;
     
     static Regularization* create(std::string name);

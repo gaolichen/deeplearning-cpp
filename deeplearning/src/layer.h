@@ -2,6 +2,8 @@
 #include "common.h"
 #include "node.h"
 #include "datautil.h"
+#include "onehot.h"
+#include "featurecolumn.h"
 
 class Layer {
 private:
@@ -42,38 +44,62 @@ struct DataTransformer {
     dataTransformFun fun;
 };
 
-class FirstLayer : public SimpleLayer {
+class FirstLayer : public Layer {
 private:
-    std::vector<std::vector<int> > _crossFeatures;
-    std::vector<DataTransformer> _transformers;
+    std::vector<NumericColumn*> _numerics;
+    std::vector<DiscreteColumn*> _discretes;
 public:
-    FirstLayer(int numberOfInNodes, bool addUnitNode = true) : SimpleLayer(numberOfInNodes, addUnitNode) {
+    FirstLayer(bool addUnitNode = true) : Layer(addUnitNode) {
+    }
+    
+    ~FirstLayer() {
+        for (int i = 0; i < _numerics.size(); i++) {
+            delete _numerics[i];
+        }
+        
+        for (int i = 0; i < _discretes.size(); i++) {
+            delete _discretes[i];
+        }
+    }
+    
+    virtual size_t numberOfInNodes() const {
+        throw DPLException("FirstLayer::numberOfInNodes not implemented.");
     }
     
     virtual size_t numberOfOutNodes() const {
+        int ret = _numerics.size();
+        
         if (hasUnitNode()) {
-            return numberOfInNodes() + 1 + _crossFeatures.size() + _transformers.size();
+            return ret + 1;
         } else {
-            return numberOfInNodes() + _crossFeatures.size() + _transformers.size();
+            return ret;
         }
     }
+    
+    size_t numberOfDiscreteNodes() const {
+        int ret = 0;
+        for (int i = 0; i < _discretes.size(); i++) {
+            ret += _discretes[i]->range();
+        }
+        
+        return ret;
+    }
+    
+    void addFeatureColumn(FeatureColumn* column) {
+        if (column->type() == numeric) {
+            _numerics.push_back(dynamic_cast<NumericColumn*>(column));
+        } else {
+            _discretes.push_back(dynamic_cast<DiscreteColumn*>(column));
+        }
+    }
+    
+    Onehot evalDiscrete(const Matrix& input) const;
     
     virtual Matrix eval(const Matrix& input) const;
     
     virtual Array gDiff(const Matrix& z) const {
         throw DPLException("should not call FirstLayer.gDiff function.");
-    }
-    
-    void addCrossFeature(std::vector<int> columns) {
-        _crossFeatures.push_back(columns);
-    }
-    
-    void addCustomFeature(int column, dataTransformFun trans) {
-        DataTransformer dt;
-        dt.column = column;
-        dt.fun = trans;
-        _transformers.push_back(dt);
-    }
+    }    
 };
 
 class SimpleHiddenLayer : public SimpleLayer {

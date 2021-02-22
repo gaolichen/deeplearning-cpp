@@ -34,6 +34,8 @@ SET(DPL_LIB_SRCS
 	regularization.cpp
 	datautil.cpp
 	propagator.cpp
+	featurecolumn.cpp
+	onehot.cpp
 )
 
 IF(WIN32)
@@ -48,6 +50,8 @@ IF(WIN32)
     	regularization.h
     	datautil.h
     	propagator.h
+    	featurecolumn.h
+    	onehot.h
 	)
 	source_group("Header Files" FILES *.h)
 ENDIF(WIN32)
