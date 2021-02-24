@@ -299,7 +299,24 @@ D_{m}^{(l)i}\equiv\frac{\partial}{\partial z_{i}^{(l)m}}\left[J\circ g^{(L)}\cir
 
 \end_inset
 
+ 
+\begin_inset Formula $x^{(l)}$
+\end_inset
 
+ is a 
+\begin_inset Formula $\left(s_{l}+1\right)\times M$
+\end_inset
+
+ dimensional matrix and 
+\begin_inset Formula $D^{(l+1)}$
+\end_inset
+
+ is a 
+\begin_inset Formula $M\times s_{l+1}$
+\end_inset
+
+ dimensional matrix.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -337,7 +354,7 @@ Now assume for hidden layers
 \begin{align*}
 {D_{m}^{(l-1)}}^{i} & =D_{m}^{(l)j}\Theta_{j}^{(l-1)k}\delta_{k}^{i}\left(g_{k}^{(l-1)\prime}\right)\Big|_{z_{i}^{(l-1)m}}\\
  & =D_{m}^{(l)j}\Theta_{j}^{(l-1)i}\left(g^{(l-1)}\right)^{\prime}\Big|_{z_{i}^{(l-1)m}}\\
- & =\left(D^{(l)}\Theta^{(a-1)}\right).*\left(g^{(l-1)}\right)^{\prime}
+ & =\left(D^{(l)}\Theta^{(l-1)}\right).*\left(g^{(l-1)}\right)^{\prime}
 \end{align*}
 
 \end_inset
@@ -350,6 +367,45 @@ where
 
 \end_inset
 
+ Note that if we a node has one more output then input, i.e, it has bias
+ unit node, then the index 
+\begin_inset Formula $k$
+\end_inset
+
+ of 
+\begin_inset Formula $g_{k}^{(l)}$
+\end_inset
+
+ runs over one additional value than the index 
+\begin_inset Formula $i$
+\end_inset
+
+ in 
+\begin_inset Formula $z_{i}^{(l)}$
+\end_inset
+
+.
+ The kronecker 
+\begin_inset Formula $\delta_{k}^{i}$
+\end_inset
+
+ effectively reduces range of 
+\begin_inset Formula $k$
+\end_inset
+
+ to be the same as 
+\begin_inset Formula $i$
+\end_inset
+
+.
+ It implies that the range of upper index in 
+\begin_inset Formula $\Theta_{j}^{(l-1)i}$
+\end_inset
+
+ should also be reduced by one.
+\end_layout
+
+\begin_layout Standard
 The dimension of 
 \begin_inset Formula $D^{(l)}$
 \end_inset
@@ -372,6 +428,10 @@ D_{m}^{(L)i} & \equiv\frac{\partial}{\partial z_{i}^{(L)m}}\left[J\circ g^{(L)}\
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
 Consider the classification case.
  The loss function
 \begin_inset Formula 
