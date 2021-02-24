@@ -38,6 +38,100 @@ BOOST_DATA_TEST_CASE(FirstLayer_addCrossFeature_test, bdata::random(2, 10) ^ bda
     }
 }*/
 
+BOOST_DATA_TEST_CASE(indexOfUnitNode_test, bdata::random(2, 10) ^ bdata::xrange(20), nodes, index)
+{
+    SimpleHiddenLayer layer1("", nodes, true);
+    // The SimplePropagator::backward and DropoutLayer::gDiff functions
+    // assume the bias unit node to be the last node of the layer,
+    // if it is not, the multi layer network will fail.
+    BOOST_TEST_REQUIRE(layer1.indexOfUnitNode() == nodes);
+    
+    SimpleHiddenLayer layer2("", nodes, false);
+    BOOST_TEST_REQUIRE(layer2.indexOfUnitNode() < 0);
+
+    std::vector<int> cols;
+    for (int i = 0; i < nodes; i++) cols.push_back(i);
+    FirstLayer layer3(cols);
+    // although the first lay is not necessary to put the bias unit node at the last position,
+    // to be consist we also requires it to be the last node.
+    BOOST_TEST_REQUIRE(layer3.indexOfUnitNode() == nodes);
+    
+    FirstLayer layer4(cols, false);
+    BOOST_TEST_REQUIRE(layer4.indexOfUnitNode() < 0);
+}
+
+
+BOOST_DATA_TEST_CASE(DropoutLayer_eval_test, bdata::random(2, 10) ^ bdata::xrange(20), nodes, index)
+{
+    SimpleHiddenLayer* innerLayer = new SimpleHiddenLayer("relu", nodes, true);
+    data_t rate = random(0, 1);
+    DropoutLayer layer(rate);
+    layer.setLayer(innerLayer);
+    layer.setTraining(true);
+    
+    int dataSize = 10;
+    Matrix input = Matrix::Random(nodes, dataSize);
+    Matrix res1 = layer.eval(input);
+    Matrix res2 = innerLayer->eval(input);
+    for (int i = 0; i < res1.rows(); i++) {
+        if (i == innerLayer->indexOfUnitNode()) {
+            BOOST_TEST_INFO("res1.row(i)=" << res1.row(i) << ", res2.row(i)=" << res2.row(i));
+            BOOST_TEST_REQUIRE((res1.row(i) - res2.row(i)).squaredNorm() < EPS);
+        } else {
+            if (res1.row(i).squaredNorm() > EPS) {
+                BOOST_TEST_INFO("res1.row(i)=" << res1.row(i) << ", res2.row(i)=" << res2.row(i));
+                BOOST_TEST_REQUIRE(abs(res1.row(i).norm() * (1 - rate) - res2.row(i).norm()) < EPS);
+            }
+        }
+    }
+}
+
+BOOST_DATA_TEST_CASE(DropoutLayer_eval_test2, bdata::random(2, 10) ^ bdata::xrange(20), nodes, index)
+{
+    SimpleHiddenLayer* innerLayer = new SimpleHiddenLayer("", nodes, false);
+    data_t rate = random(0, 1);
+    DropoutLayer layer(rate);
+    layer.setLayer(innerLayer);
+    layer.setTraining(false);
+    
+    int dataSize = 10;
+    Matrix input = Matrix::Random(nodes, dataSize);
+    Matrix res1 = layer.eval(input);
+    Matrix res2 = innerLayer->eval(input);
+    BOOST_TEST_REQUIRE(res1.rows() == res2.rows());
+    BOOST_TEST_REQUIRE(res1.cols() == res2.cols());
+    for (int i = 0; i < res1.rows(); i++) {
+        BOOST_TEST_INFO("res1.row(i)=" << res1.row(i) << ", res2.row(i)=" << res2.row(i));
+        BOOST_TEST_REQUIRE((res1.row(i) - res2.row(i)).squaredNorm() < EPS);
+    }
+}
+
+BOOST_DATA_TEST_CASE(DropoutLayer_gdiff_test, bdata::random(2, 10) ^ bdata::xrange(20), nodes, index)
+{
+    SimpleHiddenLayer* innerLayer = new SimpleHiddenLayer("relu", nodes, true);
+    data_t rate = random(0, 1);
+    DropoutLayer layer(rate);
+    layer.setLayer(innerLayer);
+    layer.setTraining(true);
+    
+    int dataSize = 10;
+    Matrix input = Matrix::Random(nodes, dataSize);
+    Matrix res1 = layer.gDiff(input);
+    Matrix res2 = innerLayer->gDiff(input);
+    for (int i = 0; i < res1.cols(); i++) {
+        if (i == innerLayer->indexOfUnitNode()) {
+            BOOST_TEST_INFO("res1.col(i)=" << res1.col(i) << ", res2.col(i)=" << res2.col(i));
+            BOOST_TEST_REQUIRE((res1.col(i) - res2.col(i)).squaredNorm() < EPS);
+        } else {
+            if (res1.col(i).squaredNorm() > EPS) {
+                BOOST_TEST_INFO("res1.col(i)=" << res1.col(i) << ", res2.col(i)=" << res2.col(i));
+                BOOST_TEST_REQUIRE(abs(res1.col(i).norm() * (1 - rate) - res2.col(i).norm()) < EPS);
+            }
+        }
+    }
+}
+
+
 BOOST_DATA_TEST_CASE(FirstLayer_eval_test, bdata::random(2, 10) ^ bdata::random(2, 10) ^ bdata::xrange(20), rows, cols, index)
 {
     Matrix mat = Matrix::Random(rows, cols);
@@ -63,13 +157,45 @@ BOOST_DATA_TEST_CASE(FirstLayer_eval_test2, bdata::random(2, 10) ^ bdata::random
     BOOST_TEST_REQUIRE(ret.cols() == rows);
     for (int i = 0; i < ret.rows(); i++) {
         for (int j = 0; j < ret.cols(); j++) {
-            if (i == ret.rows() - 1) {
+            if (i == layer.indexOfUnitNode()) {
                 BOOST_TEST_REQUIRE(abs(ret(i, j) - 1) < EPS);
             } else {
                 BOOST_TEST_REQUIRE(abs(ret(i, j) - mat(j, i)) < EPS);
             }
         }
     }    
+}
+
+BOOST_DATA_TEST_CASE(SimpleHiddenLayer_constructor_test, bdata::random(2, 10) ^ bdata::xrange(20), nodes, index)
+{
+    SimpleHiddenLayer layer1("", nodes, true);
+    BOOST_TEST_REQUIRE(layer1.numberOfInNodes() == nodes);
+    BOOST_TEST_REQUIRE(layer1.numberOfOutNodes() == nodes + 1);
+    BOOST_TEST_REQUIRE(!layer1.getActivation());
+    
+    SimpleHiddenLayer layer2("relu", nodes, false);
+    BOOST_TEST_REQUIRE(layer2.numberOfInNodes() == nodes);
+    BOOST_TEST_REQUIRE(layer2.numberOfOutNodes() == nodes);
+    BOOST_TEST_REQUIRE(layer2.getActivation());
+}
+
+
+BOOST_DATA_TEST_CASE(SimpleHiddenLayer_eval_test, bdata::random(2, 10) ^ bdata::random(2, 10) ^ bdata::xrange(20), rows, cols, index)
+{
+    Matrix mat = Matrix::Random(rows, cols);
+    SimpleHiddenLayer layer("", rows, true);
+    Matrix ret = layer.eval(mat);
+    BOOST_TEST_REQUIRE(ret.rows() == rows + 1);
+    BOOST_TEST_REQUIRE(ret.cols() == cols);
+    for (int i = 0; i < ret.rows(); i++) {
+        for (int j = 0; j < ret.cols(); j++) {
+            if (i == layer.indexOfUnitNode()) {
+                BOOST_TEST_REQUIRE(abs(ret(i, j) - 1) < EPS);
+            } else {
+                BOOST_TEST_REQUIRE(abs(ret(i, j) - mat(i, j)) < EPS);
+            }
+        }
+    }
 }
 
 BOOST_DATA_TEST_CASE(RegressionOutputLayer_eval_test, bdata::random(10, 50) ^ bdata::random(2, 10) ^ bdata::xrange(20), testcases, units, index)

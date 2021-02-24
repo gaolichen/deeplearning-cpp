@@ -18,11 +18,13 @@ class Model {
 private:
     std::vector<Matrix> _weights;
     Matrix _discreteWeight;
-    std::vector<const Layer*> _layers;
+    std::vector<Layer*> _layers;
     Regularization* _regular = NULL;
     Propagator* _propagator = NULL;
     Vector _trainingLoss;
     Vector _validationLoss;
+    
+    void setTraining(bool isTraining);
 public:
     Model();
     ~Model();
@@ -45,7 +47,7 @@ public:
     
     void plotLoss(bool rms = false) const;
    
-    void addLayer(const Layer* layer);
+    void addLayer(Layer* layer);
     
     void prepare(std::string regularization = "L2");
     

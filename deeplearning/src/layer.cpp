@@ -1,6 +1,41 @@
 #include "layer.h"
 #include "datautil.h"
 
+void Layer::setTraining(bool training) {
+    this->_training = training;
+}
+
+
+void DropoutLayer::setTraining(bool training) {
+    Layer::setTraining(training);
+    if (!training) {
+        _dropVector.resize(0);
+    } else {
+        _dropVector = DataUtil::randomDropoutVector(_layer->numberOfOutNodes(), _rate, {_layer->indexOfUnitNode()});
+    }
+}
+
+Matrix DropoutLayer::eval(const Matrix& input) const {
+    if (!isTraining()) {
+        return _layer->eval(input);
+    } else {
+        return _dropVector.asDiagonal() * _layer->eval(input);
+    }
+}
+
+Array DropoutLayer::gDiff(const Matrix& z) const {
+    if (!isTraining()) {
+        return _layer->gDiff(z);
+    } else {
+        if (_layer->indexOfUnitNode() >= 0) {
+            // we assume the bias unit node is always the last node.
+            return (_layer->gDiff(z).matrix() * _dropVector.block(0, 0, _layer->numberOfInNodes(), 1).asDiagonal()).array();
+        } else {
+            return (_layer->gDiff(z).matrix() * _dropVector.asDiagonal()).array();
+        }
+    }
+}
+    
 Matrix FirstLayer::eval(const Matrix& input) const {
     int rows = numberOfOutNodes();
     Matrix ret(rows, input.rows());
@@ -33,33 +68,24 @@ Onehot FirstLayer::evalDiscrete(const Matrix& input) const {
     return ret;
 }
 
-SimpleHiddenLayer::SimpleHiddenLayer(std::string activation, int numberOfNodes, bool addUnitNode)
-    : SimpleLayer(numberOfNodes, addUnitNode) {    
-    if (activation != "") {
-        this->_activation = Activation::create(activation);
-    }
-}
-
 Matrix SimpleHiddenLayer::eval(const Matrix& input) const {
     if (input.rows() != this->numberOfInNodes()) {
         throw DPLException("SimpleHiddenLayer::eval: invalid input matrix size.");
     }
     
     Matrix ret;
-    int br = 0;
     if (!hasUnitNode()) {
         ret.resize(input.rows(), input.cols());
     } else {
         ret.resize(input.rows() + 1, input.cols());
-        ret.block(0, 0, 1, input.cols()) = Matrix::Constant(1, input.cols(), 1.0);
-        br = 1;
+        ret.block(indexOfUnitNode(), 0, 1, input.cols()) = Matrix::Constant(1, input.cols(), 1.0);
     }
     if (_activation == NULL) {
-        ret.block(br, 0, input.rows(), input.cols()) = input;
+        ret.block(0, 0, input.rows(), input.cols()) = input;
     } else {
         for (int i = 0; i < input.rows(); i++) {
             for (int j = 0; j < input.cols(); j++) {
-                ret(br + i, j) = _activation->eval(input(i, j));
+                ret(i, j) = _activation->eval(input(i, j));
             }
         }
     }
@@ -71,9 +97,9 @@ Array SimpleHiddenLayer::gDiff(const Matrix& z) const {
     if (z.rows() != numberOfInNodes()) {
         throw DPLException("invalid matrix size of z argument.");
     }
-    
+        
     if (_activation == NULL) {
-        return Matrix::Constant(z.cols(), z.rows(), 1.0);
+        return Array::Constant(z.cols(), z.rows(), 1.0);
     } else {
         Array ret(z.cols(), z.rows());
         for (int i = 0; i < z.cols(); i++) {
@@ -81,7 +107,6 @@ Array SimpleHiddenLayer::gDiff(const Matrix& z) const {
                 ret(i, j) = _activation->diff(z(j, i));
             }
         }
-            
         return ret;
     }
 }

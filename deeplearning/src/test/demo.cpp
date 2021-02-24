@@ -24,13 +24,7 @@ BOOST_AUTO_TEST_CASE(demo_random_input)
     size_t dataSize = 100;
     size_t featureSize = 5;
     size_t hiddenLayerSize = 3;
-    FirstLayer* firstLayer = new FirstLayer();
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(0));
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(1));
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(2));
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(3));
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(4));
-    model.addLayer(firstLayer);
+    model.addLayer(new FirstLayer({0, 1, 2, 3, 4}));
 
     for (int i = 0; i < hiddenLayerSize; i++) {
         model.addLayer(new SimpleHiddenLayer("relu", featureSize));
@@ -67,10 +61,7 @@ BOOST_AUTO_TEST_CASE(demo_line)
     size_t featureSize = 2;
     size_t hiddenLayerSize = 0;
     std::string regularization = "L1";
-    FirstLayer* firstLayer = new FirstLayer();
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(0));
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(1));
-    model.addLayer(firstLayer);
+    model.addLayer(new FirstLayer({0, 1}));
 
     for (int i = 0; i < hiddenLayerSize; i++) {
         model.addLayer(new SimpleHiddenLayer("relu", featureSize + 1));
@@ -143,8 +134,8 @@ BOOST_AUTO_TEST_CASE(demo_circle)
     
     Model model;
     FirstLayer* firstLayer = new FirstLayer();
-    firstLayer->addFeatureColumn(new NumericCrossColumn(std::vector<int> {0, 0}));
-    firstLayer->addFeatureColumn(new NumericCrossColumn(std::vector<int> {1, 1}));
+    firstLayer->addFeatureColumn(new NumericCrossColumn({0, 0}));
+    firstLayer->addFeatureColumn(new NumericCrossColumn({1, 1}));
     model.addLayer(firstLayer);
     
     for (int i = 0; i < hiddenLayerSize; i++) {
@@ -203,12 +194,8 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
     size_t dataSize = 500;
     size_t featureSize = 2;
     size_t hiddenLayerSize = 0;
-    std::string regularization = "L1";
-    
-    FirstLayer* firstLayer = new FirstLayer(featureSize);
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(0));
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(1));
-    model.addLayer(firstLayer);
+    std::string regularization = "L1";    
+    model.addLayer(new FirstLayer({0, 1}));
 
     for (int i = 0; i < hiddenLayerSize; i++) {
         model.addLayer(new SimpleHiddenLayer("sigmoid", 3));
@@ -267,10 +254,7 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
     size_t hiddenLayerSize = 0;
     std::string regularization = "L2";
     
-    FirstLayer* firstLayer = new FirstLayer();
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(0));
-    firstLayer->addFeatureColumn(new SimpleNumericColumn(1));
-    model.addLayer(firstLayer);
+    model.addLayer(new FirstLayer({0, 1}));
 
     for (int i = 0; i < hiddenLayerSize; i++) {
         model.addLayer(new SimpleHiddenLayer("relu", 2));
@@ -357,8 +341,7 @@ BOOST_AUTO_TEST_CASE(ca_house)
     Model model;
     std::string regularization = "L2";
     
-    FirstLayer* firstLayer = new FirstLayer(1);
-    model.addLayer(firstLayer);
+    model.addLayer(new FirstLayer({featureCol}, true));
 
     int hiddenLayerSize = 0;
     for (int i = 0; i < hiddenLayerSize; i++) {
@@ -375,22 +358,20 @@ BOOST_AUTO_TEST_CASE(ca_house)
         .validation_split = 0.2,
     };
     
-    model.train(trainData.col(featureCol), trainData.col(labelCol), params);
+    model.train(trainData, trainData.col(labelCol), params);
     std::cout << model.trainingLoss().array().sqrt().transpose() << std::endl << std::endl;
     std::cout << model.validationLoss().array().sqrt().transpose() << std::endl << std::endl;
-    std::cout << "test data loss rms= " << sqrt(model.evaluate(testData.col(featureCol), testData.col(labelCol))) << std::endl;
+    std::cout << "test data loss rms= " << sqrt(model.evaluate(testData, testData.col(labelCol))) << std::endl;
     model.plotLoss(true);
     
 }
 
+// test discrete cross column
 BOOST_AUTO_TEST_CASE(ca_house2)
 {
     CSVData csvTrain, csvTest;
     csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
     csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
-    
-//    std::cout << csvTrain.headers() << std::endl;
-//    std::cout << csvTest.headers() << std::endl;
     
     Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
     Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
@@ -403,19 +384,15 @@ BOOST_AUTO_TEST_CASE(ca_house2)
     data_t scaleFactor = 1000.0;
     trainData.col(labelCol) /= scaleFactor;
     testData.col(labelCol) /= scaleFactor;
-//    std::cout << "top 5 rows of trainData = " << std::endl << trainData.block(0, 0, 5, trainData.cols()) << std::endl;
-    
     Model model;
     std::string regularization = "L2";
     
-    FirstLayer* firstLayer = new FirstLayer(1);
-        
+    FirstLayer* firstLayer = new FirstLayer();        
     firstLayer->addFeatureColumn(new SimpleNumericColumn(featureCol));
     
     data_t resolution = .4;
     firstLayer->addFeatureColumn(
-        new DiscreteCrossColumn(
-            std::vector<DiscreteColumn*> {
+        new DiscreteCrossColumn({
                 new BucketedColumn(latitudeCol,
                 trainData.col(latitudeCol).minCoeff(),
                 trainData.col(latitudeCol).maxCoeff(), 
@@ -450,6 +427,199 @@ BOOST_AUTO_TEST_CASE(ca_house2)
     std::cout << model.validationLoss().array().sqrt().transpose() << std::endl << std::endl;
     std::cout << "test data loss rms= " << sqrt(model.evaluate(testData, testData.col(labelCol))) << std::endl;
     model.plotLoss(true);
+}
+
+BOOST_AUTO_TEST_CASE(ca_house3)
+{
+    CSVData csvTrain, csvTest;
+    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
+    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    
+    Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
+    Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
+    
+    trainData = DataUtil::zScoreNormalize(trainData);
+    testData = DataUtil::zScoreNormalize(testData);
+    int labelCol = csvTrain.headerIndex("\"median_house_value\"");
+    int medianIncomeCol = csvTrain.headerIndex("\"median_income\"");
+    int latitudeCol = csvTrain.headerIndex("\"latitude\"");
+    int longitudeCol = csvTrain.headerIndex("\"longitude\"");
+    int polulationCol = csvTrain.headerIndex("\"population\"");
+    
+    Model model;
+    std::string regularization = "L2";
+    
+    FirstLayer* firstLayer = new FirstLayer({medianIncomeCol, polulationCol});
+    
+    std::cout <<"latitude range=" << std::vector<data_t>{trainData.col(latitudeCol).minCoeff(),
+                trainData.col(latitudeCol).maxCoeff()} << std::endl;
+    std::cout <<"longitude range=" << std::vector<data_t>{trainData.col(longitudeCol).minCoeff(),
+                trainData.col(longitudeCol).maxCoeff()} << std::endl;
+    data_t resolution = .3;
+    firstLayer->addFeatureColumn(
+        new DiscreteCrossColumn({
+                new BucketedColumn(latitudeCol,
+                trainData.col(latitudeCol).minCoeff(),
+                trainData.col(latitudeCol).maxCoeff(), 
+                resolution), 
+                new BucketedColumn(longitudeCol,
+                trainData.col(longitudeCol).minCoeff(),
+                trainData.col(longitudeCol).maxCoeff(), 
+                resolution)
+            }
+        )
+    );
+    
+    model.addLayer(firstLayer);
+
+    int hiddenLayerSize = 0;
+    for (int i = 0; i < hiddenLayerSize; i++) {
+        model.addLayer(new SimpleHiddenLayer("relu", 2));
+    }
+    model.addLayer(new RegressionOutputLayer(1));
+    model.prepare(regularization);
+    
+    HyperParameter params = {
+        .epochs = 100,
+        .batch = 1000, 
+        .learningRate = 0.05,
+        .lambda = 0.00,
+        .validation_split = 0,
+    };
+    
+    model.train(trainData, trainData.col(labelCol), params);
+    std::cout << model.trainingLoss().transpose() << std::endl << std::endl;
+    std::cout << model.validationLoss().transpose() << std::endl << std::endl;
+    data_t testLoss = model.evaluate(testData, testData.col(labelCol));
+    std::cout << "test data loss= " << testLoss << std::endl;
+    model.plotLoss(false);
+}
+
+BOOST_AUTO_TEST_CASE(ca_house4)
+{
+    CSVData csvTrain, csvTest;
+    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
+    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    
+    Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
+    Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
+    
+    trainData = DataUtil::zScoreNormalize(trainData);
+    testData = DataUtil::zScoreNormalize(testData);
+    int labelCol = csvTrain.headerIndex("\"median_house_value\"");
+    int medianIncomeCol = csvTrain.headerIndex("\"median_income\"");
+    int latitudeCol = csvTrain.headerIndex("\"latitude\"");
+    int longitudeCol = csvTrain.headerIndex("\"longitude\"");
+    int polulationCol = csvTrain.headerIndex("\"population\"");
+    
+    Model model;
+    std::string regularization = "L2";
+    
+    FirstLayer* firstLayer = new FirstLayer({medianIncomeCol, polulationCol});
+    
+    std::cout <<"latitude range=" << std::vector<data_t>{trainData.col(latitudeCol).minCoeff(),
+                trainData.col(latitudeCol).maxCoeff()} << std::endl;
+    std::cout <<"longitude range=" << std::vector<data_t>{trainData.col(longitudeCol).minCoeff(),
+                trainData.col(longitudeCol).maxCoeff()} << std::endl;
+    data_t resolution = .3;
+    firstLayer->addFeatureColumn(
+        new DiscreteCrossColumn({
+                new BucketedColumn(latitudeCol,
+                trainData.col(latitudeCol).minCoeff(),
+                trainData.col(latitudeCol).maxCoeff(), 
+                resolution), 
+                new BucketedColumn(longitudeCol,
+                trainData.col(longitudeCol).minCoeff(),
+                trainData.col(longitudeCol).maxCoeff(), 
+                resolution)
+            }
+        )
+    );
+    
+    model.addLayer(firstLayer);
+    model.addLayer(new SimpleHiddenLayer("relu", 20));
+    model.addLayer(new SimpleHiddenLayer("relu", 12));
+    model.addLayer(new RegressionOutputLayer(1));
+    model.prepare(regularization);
+    
+    HyperParameter params = {
+        .epochs = 100,
+        .batch = 1000, 
+        .learningRate = 0.05,
+        .lambda = 0.00,
+        .validation_split = 0,
+    };
+    
+    model.train(trainData, trainData.col(labelCol), params);
+    std::cout << model.trainingLoss().transpose() << std::endl << std::endl;
+    std::cout << model.validationLoss().transpose() << std::endl << std::endl;
+    data_t testLoss = model.evaluate(testData, testData.col(labelCol));
+    std::cout << "test data loss= " << testLoss << std::endl;
+    model.plotLoss(false);
+}
+
+BOOST_AUTO_TEST_CASE(ca_house5)
+{
+    CSVData csvTrain, csvTest;
+    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
+    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    
+    Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
+    Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
+    
+    trainData = DataUtil::zScoreNormalize(trainData);
+    testData = DataUtil::zScoreNormalize(testData);
+    int labelCol = csvTrain.headerIndex("\"median_house_value\"");
+    int medianIncomeCol = csvTrain.headerIndex("\"median_income\"");
+    int latitudeCol = csvTrain.headerIndex("\"latitude\"");
+    int longitudeCol = csvTrain.headerIndex("\"longitude\"");
+    int polulationCol = csvTrain.headerIndex("\"population\"");
+    
+    Model model;
+    std::string regularization = "L2";
+    
+    FirstLayer* firstLayer = new FirstLayer({medianIncomeCol, polulationCol});
+    
+    std::cout <<"latitude range=" << std::vector<data_t>{trainData.col(latitudeCol).minCoeff(),
+                trainData.col(latitudeCol).maxCoeff()} << std::endl;
+    std::cout <<"longitude range=" << std::vector<data_t>{trainData.col(longitudeCol).minCoeff(),
+                trainData.col(longitudeCol).maxCoeff()} << std::endl;
+    data_t resolution = .3;
+    firstLayer->addFeatureColumn(
+        new DiscreteCrossColumn({
+                new BucketedColumn(latitudeCol,
+                trainData.col(latitudeCol).minCoeff(),
+                trainData.col(latitudeCol).maxCoeff(), 
+                resolution), 
+                new BucketedColumn(longitudeCol,
+                trainData.col(longitudeCol).minCoeff(),
+                trainData.col(longitudeCol).maxCoeff(), 
+                resolution)
+            }
+        )
+    );
+    
+    model.addLayer(firstLayer);
+    model.addLayer(new SimpleHiddenLayer("relu", 20));
+    model.addLayer(new DropoutLayer(0.2));
+    model.addLayer(new SimpleHiddenLayer("relu", 12));
+    model.addLayer(new RegressionOutputLayer(1));
+    model.prepare(regularization);
+    
+    HyperParameter params = {
+        .epochs = 100,
+        .batch = 1000, 
+        .learningRate = 0.05,
+        .lambda = 0.01,
+        .validation_split = 0.2,
+    };
+    
+    model.train(trainData, trainData.col(labelCol), params);
+    std::cout << model.trainingLoss().transpose() << std::endl << std::endl;
+    std::cout << model.validationLoss().transpose() << std::endl << std::endl;
+    data_t testLoss = model.evaluate(testData, testData.col(labelCol));
+    std::cout << "test data loss= " << testLoss << std::endl;
+    model.plotLoss(false);
 }
 
 

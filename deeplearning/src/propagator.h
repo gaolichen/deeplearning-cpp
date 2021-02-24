@@ -33,9 +33,9 @@ public:
         return _disWeightChange;
     }
         
-    virtual void forward(const std::vector<const Layer*>& layers, const std::vector<Matrix>& weights, const Matrix& disWeight, const Matrix& data) = 0;
+    virtual void forward(const std::vector<Layer*>& layers, const std::vector<Matrix>& weights, const Matrix& disWeight, const Matrix& data) = 0;
     
-    virtual void backward(const std::vector<const Layer*>& layers, const std::vector<Matrix>& weights, const Matrix& disWeight, const Matrix& y) = 0;
+    virtual void backward(const std::vector<Layer*>& layers, const std::vector<Matrix>& weights, const Matrix& disWeight, const Matrix& y) = 0;
 };
 
 class SimplePropagator : public Propagator {
@@ -44,11 +44,11 @@ private:
     static Matrix discreteDot(int maxRow, const MatrixI& x, const Matrix& delta);
 public:
     virtual void forward(
-            const std::vector<const Layer*>& layers,
+            const std::vector<Layer*>& layers,
             const std::vector<Matrix>& weights,
             const Matrix& disWeight,
             const Matrix& data);
     
-    virtual void backward(const std::vector<const Layer*>& layers,
+    virtual void backward(const std::vector<Layer*>& layers,
             const std::vector<Matrix>& weights, const Matrix& disWeight, const Matrix& y);
 };

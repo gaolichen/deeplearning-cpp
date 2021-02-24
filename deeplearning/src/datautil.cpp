@@ -79,7 +79,37 @@ std::vector<data_t> DataUtil::eigenArrayToSTL(const Array& array, bool smooth) {
     } else {
         return std::vector<data_t>(array.data(), array.data() + array.size());
     }
+}
 
+Array DataUtil::colWiseStd(const Matrix& mat) {
+    Matrix diff = mat.rowwise() - mat.colwise().mean().matrix();
+    return (diff.colwise().squaredNorm().array() / diff.rows()).sqrt();
+}
+
+Matrix DataUtil::zScoreNormalize(const Matrix& mat) {
+    Matrix diff = mat.rowwise() - mat.colwise().mean().matrix();
+    RVector std = (diff.colwise().squaredNorm().array() / diff.rows()).sqrt().matrix();
+    for (int i = 0; i < diff.cols(); i++) {
+        diff.col(i) /= std(i);
+    }
+    return diff;
+}
+
+Vector DataUtil::randomDropoutVector(int size, data_t dropRate, const std::vector<int>& noDropPositions) {
+    Vector ret(size);
+    for (int i = 0; i < size; i++) {
+        if (std::find(noDropPositions.begin(), noDropPositions.end(), i) != noDropPositions.end()) {
+            ret(i) = 1;
+        } else {
+            if (random(0, 1) < dropRate) {
+                ret(i) = 0;
+            } else {
+                ret(i) = 1/(1 - dropRate);
+            }
+        }
+    }
+    
+    return ret;
 }
 
 void CSVData::read(std::string path, bool hasHeader) {

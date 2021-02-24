@@ -23,6 +23,12 @@ public:
     static std::vector<data_t> eigenVectorToSTL(const Vector& vec, bool smooth = false);
     
     static std::vector<data_t> eigenArrayToSTL(const Array& vec, bool smooth = false);
+    
+    static Matrix zScoreNormalize(const Matrix& mat);
+    
+    static Array colWiseStd(const Matrix& mat);
+    
+    static Vector randomDropoutVector(int size, data_t dropRate, const std::vector<int>& noDropPositions);
 };
 
 class CSVData {

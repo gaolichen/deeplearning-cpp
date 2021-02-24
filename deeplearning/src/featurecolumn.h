@@ -42,6 +42,10 @@ public:
     }
     
     virtual data_t evalNumeric(const RVector& row) const {
+        if (row.size() <= this->columnIndex()) {
+            throw DPLException("SimpleNumericColumn::evalNumeric the size of row is too small.");
+        }
+        
         return row(this->columnIndex());
     }
 };
@@ -113,9 +117,11 @@ public:
     virtual int evalDiscrete(const RVector& row) const {
         data_t v = row(this->columnIndex());
         if (v < _minValue || v > _maxValue) {
+            std::cout << "BucketedColumn::evalDiscrete: v is out of range. ";
             std::cout << "v=" << v << " minValue=" << _minValue << " maxValue=" << _maxValue << std::endl;
-            std::cout << "row=" << row << std::endl;
-            throw DPLException("BucketedColumn::evaluate v is out of range.");
+//            std::cout << "row=" << row << std::endl;
+//            throw DPLException("BucketedColumn::evaluate v is out of range.");
+            return v < _minValue ? 0 : range() - 1;
         }
         return (int)floor((v - _minValue) / _resolution);
     }

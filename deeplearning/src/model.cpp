@@ -30,8 +30,23 @@ Model::~Model() {
     _layers.clear();
 }
 
-void Model::addLayer(const Layer* layer) {
-    _layers.push_back(layer);
+void Model::addLayer(Layer* layer) {
+    LayerWrapper* wrapper = dynamic_cast<LayerWrapper*>(layer);
+    if (wrapper == NULL) {
+        _layers.push_back(layer);
+    } else {
+        if (_layers.size() == 0) {
+            throw DPLException("There is no layer to wrap.");
+        }
+        wrapper->setLayer(_layers.back());
+        _layers[_layers.size() - 1] = wrapper;
+    }
+}
+
+void Model::setTraining(bool isTraining) {
+    for (int i = 0; i < _layers.size(); i++) {
+        _layers[i]->setTraining(isTraining);
+    }
 }
 
 void Model::prepare(std::string regularization) {
@@ -43,6 +58,10 @@ void Model::prepare(std::string regularization) {
     const FirstLayer *firstLayer = dynamic_cast<const FirstLayer*>(_layers[0]);
     if (firstLayer == NULL) {
         throw DPLException("The first layer must be of type FirstLayer.");
+    }
+    const OutputLayer *lastLayer = dynamic_cast<const OutputLayer*>(_layers.back());
+    if (lastLayer == NULL) {
+        throw DPLException("The last layer must be of type OutputLayer.");
     }
     
     srand(time(NULL));
@@ -74,7 +93,13 @@ void Model::train(const Matrix& data, const Matrix& y, HyperParameter params) {
     std::cout << "validationY=" << validationY << std::endl << std::endl;*/
     
     _trainingLoss.resize(params.epochs);
-    _validationLoss.resize(params.epochs);
+    if (validation.rows() > 0) {
+        _validationLoss.resize(params.epochs);
+    } else {
+        _validationLoss.resize(0);
+    }
+    
+    // set isTraining to true.
     for (int i = 0; i < params.epochs; i++) {        
         std::vector<int> v;
         if (params.batch > 0 && params.batch < training.rows()) {
@@ -84,6 +109,7 @@ void Model::train(const Matrix& data, const Matrix& y, HyperParameter params) {
         const Matrix& features = v.size() ? SUBSET(training, v) : training;
         const Matrix& labels = v.size() ? SUBSET(trainingY, v) : trainingY;
         
+        setTraining(true);
         // do forward and backward propagators
         _propagator->forward(_layers, _weights, _discreteWeight, features);
         _propagator->backward(_layers, _weights, _discreteWeight, labels);
@@ -91,6 +117,9 @@ void Model::train(const Matrix& data, const Matrix& y, HyperParameter params) {
         for (int j = 0; j < _layers.size() - 1; j++) {
             if (_weights[j].rows() != _propagator->getWeightChange(j).rows() ||
                 _weights[j].cols() != _propagator->getWeightChange(j).cols()) {
+                std::cout << std::vector<Eigen::Index>{_weights[j].rows(), _weights[j].cols(), _propagator->getWeightChange(j).rows(), _propagator->getWeightChange(j).cols()} << " j=" << j << std::endl;
+                std::cout << "_weights[j]=" << _weights[j] << std::endl;
+                std::cout << "_propagator->getWeightChange(j)=" << _propagator->getWeightChange(j) << std::endl;
                 throw DPLException("Model::train: getWeightChange matrix size not match.");
             }
             _weights[j] -= params.learningRate * (_propagator->getWeightChange(j)
@@ -100,6 +129,8 @@ void Model::train(const Matrix& data, const Matrix& y, HyperParameter params) {
         _discreteWeight -= params.learningRate * (_propagator->discreteWeightChange() 
                 + params.lambda * _regular->diff(_discreteWeight));
         
+        // set isTraining to false.
+        setTraining(false);
         if (validation.rows() > 0) {
             _validationLoss[i] = evaluate(validation, validationY);
         }

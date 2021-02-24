@@ -69,6 +69,44 @@ BOOST_DATA_TEST_CASE(randomRowShuffle, bdata::random(15, 16) ^ bdata::random(2, 
     }
 }
 
+BOOST_DATA_TEST_CASE(randomDropoutVector, bdata::random(20, 50) ^ bdata::random(1,5) ^ bdata::xrange(10), size, noDropSize, index)
+{
+    std::vector<int> noDrops = pickRandomIndex(size, noDropSize);    
+    data_t rate = random(0, 1);
+    
+    int loops = 500;
+    data_t sum = .0;
+    for (int i = 0; i < loops; i++) {
+        Vector res = DataUtil::randomDropoutVector(size, rate, noDrops);
+        for (int j = 0; j < noDrops.size(); j++) {
+            BOOST_TEST_REQUIRE(res(noDrops[j]) == 1);
+        }
+
+        for (int j = 0; j < size; j++) {
+            if (std::find(noDrops.begin(), noDrops.end(), j) == noDrops.end()) {
+                BOOST_TEST_REQUIRE(abs(res(j) * (res(j) - 1.0/(1 - rate))) < EPS);
+            }
+        }
+        sum += res.sum();
+    }
+    
+    data_t expected = loops * size;
+    
+    BOOST_TEST_INFO("sum=" << sum << ", expected=" << expected << ", dropRate=" << rate);
+    BOOST_TEST_REQUIRE(abs((sum - expected)/expected) < 0.1);
+}
+
+
+BOOST_DATA_TEST_CASE(colWiseStd_test, bdata::random(2, 7) ^ bdata::random(2, 7) ^ bdata::xrange(1), rows, cols, index)
+{
+    Matrix mat(3, 2);
+    mat << 1, 2, 3, 4, 5, 6;
+    std::cout << "mat=" << mat << std::endl;
+    std::cout << "std=" << DataUtil::colWiseStd(mat) << std::endl;
+    
+    std::cout << "z-norm=" << DataUtil::zScoreNormalize(mat) << std::endl;
+}
+
 BOOST_DATA_TEST_CASE(randomSubIndex, bdata::random(15, 16) ^ bdata::random(2, 7) ^ bdata::xrange(2), range, setSize, index)
 {
 //    IndexType it(NULL, 0);
