@@ -169,22 +169,26 @@ BOOST_AUTO_TEST_CASE(demo_circle)
     }
 }
 
-RVector quadrant(data_t x, data_t y) {
-    RVector ret(4);
+int quadrant(data_t x, data_t y) {
+//    RVector ret(4);
     if (x > 0) {
         if (y > 0) {
-            ret << 1, 0, 0, 0;
+//            ret << 1, 0, 0, 0;
+            return 0;
         } else {
-            ret << 0, 0, 0, 1;
+//            ret << 0, 0, 0, 1;
+            return 3;
         }
     } else {
         if (y > 0) {
-            ret << 0, 1, 0, 0;
+//            ret << 0, 1, 0, 0;
+            return 1;
         } else {
-            ret << 0, 0, 1, 0;
+//            ret << 0, 0, 1, 0;
+            return 2;
         }
     }
-    return ret;
+//    return ret;
 }
 
 BOOST_AUTO_TEST_CASE(demo_softmax)
@@ -204,9 +208,11 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
     model.prepare(regularization);
     
     Matrix data = Matrix::Random(dataSize, featureSize);
-    Matrix y(dataSize, 4);
+//    Matrix y(dataSize, 4);
+    Vector y(dataSize);
     for (int i = 0; i < data.rows(); i++) {
-        y.row(i) = quadrant(data(i, 0), data(i, 1));
+//        y.row(i) = quadrant(data(i, 0), data(i, 1));
+        y(i) = quadrant(data(i, 0), data(i, 1));
     }
         
     HyperParameter params = {
@@ -226,21 +232,17 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
         std::cout << model.weights()[i] << std::endl;
     }
     
-    std::cout << "training loss=" << model.trainingLoss().transpose() << std::endl;
+    std::cout << "validation loss=" << model.validationLoss().transpose() << std::endl;
     model.plotLoss();
     
     Matrix input = Matrix::Random(20, 2);
-    Matrix expected(20, 4);
+    Vector expected(20);
     for (int i = 0; i < input.rows(); i++) {
-        expected.row(i) = quadrant(input(i, 0), input(i, 1));
+        expected(i) = quadrant(input(i, 0), input(i, 1));
     }
     
-    Matrix res = model.predict(input);
-
-    for (int i = 0; i < 20; i++) {
-        std::cout << "test " << i << std::endl;
-        std::cout << "res = " << res.row(i) << ", expected=" << expected.row(i) << std::endl;
-    }
+    data_t accuracy = model.evaluate(input, expected);
+    std::cout << "test accuracy = " << accuracy << std::endl;
     
     std::cout << "takes " << sec << " seconds to train the model." << std::endl;
 }
@@ -263,14 +265,13 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
     model.prepare(regularization);
     
     Matrix data = Matrix::Random(dataSize, featureSize);
-    Matrix y(dataSize, 2);
+//    Matrix y(dataSize, 2);
+    Vector y(dataSize);
     for (int i = 0; i < data.rows(); i++) {
         if (data(i, 0) > data(i, 1)) {
-            y(i, 0) = 1;
-            y(i, 1) = 0;
+            y(i) = 0;
         } else {
-            y(i, 1) = 1;
-            y(i, 0) = 0;
+            y(i) = 1;
         }
     }
     
@@ -287,21 +288,22 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
     Stopwatch watch;
     model.train(data, y, params);
     double sec = watch.Elapsed();
-    std::cout << "training loss=" << model.trainingLoss() << std::endl;
+    std::cout << "training loss=" << model.trainingLoss().transpose() << std::endl;
     for (int i = 0; i < model.weights().size(); i++) {
         std::cout << "weight " << i << std::endl;
         std::cout << model.weights()[i] << std::endl;
     }
     
     Matrix input = Matrix::Random(20, 2);
-    Matrix expected(20, 2);
+//    Matrix expected(20, 2);
+    Vector expected(20);
     for (int i = 0; i < input.rows(); i++) {
         if (input(i, 0) > input(i, 1)) {
-            expected(i, 0) = 1;
-            expected(i, 1) = 0;
+            expected(i) = 0;
+//            expected(i, 1) = 0;
         } else {
-            expected(i, 1) = 1;
-            expected(i, 0) = 0;
+            expected(i) = 1;
+//            expected(i, 0) = 0;
         }
     }
     
@@ -607,9 +609,9 @@ BOOST_AUTO_TEST_CASE(ca_house5)
     model.prepare(regularization);
     
     HyperParameter params = {
-        .epochs = 100,
-        .batch = 1000, 
-        .learningRate = 0.05,
+        .epochs = 200,
+        .batch = 4000, 
+        .learningRate = 0.028,
         .lambda = 0.01,
         .validation_split = 0.2,
     };
@@ -622,5 +624,54 @@ BOOST_AUTO_TEST_CASE(ca_house5)
     model.plotLoss(false);
 }
 
+BOOST_AUTO_TEST_CASE(demo_MNIST)
+{
+    Eigen::setNbThreads(4);
+    std::cout << "number of threads: " << Eigen::nbThreads() << std::endl;
+    Matrix xTrain, xTest;
+    Vector yTrain, yTest;
+    std::string xTrainPath = "/home/gaolichen/gitroot/prototype/deeplearning/mnist/train-images-idx3-ubyte";
+    std::string xTestPath = "/home/gaolichen/gitroot/prototype/deeplearning/mnist/t10k-images-idx3-ubyte";
+    std::string yTrainPath = "/home/gaolichen/gitroot/prototype/deeplearning/mnist/train-labels-idx1-ubyte";
+    std::string yTestPath = "/home/gaolichen/gitroot/prototype/deeplearning/mnist/t10k-labels-idx1-ubyte";
+    
+    DataUtil::readMNISTimage(xTrainPath, xTrain, true);
+    DataUtil::readMNISTimage(xTestPath, xTest, true);
+    DataUtil::readMNISTlabel(yTrainPath, yTrain);
+    DataUtil::readMNISTlabel(yTestPath, yTest);
+    
+    Model model;
+    std::string regularization = "L2";
+    std::vector<int> featureCols;
+    for (int i = 0; i < 28 * 28; i++) {
+        featureCols.push_back(i);
+    }
+    FirstLayer* firstLayer = new FirstLayer(featureCols);
+        
+    model.addLayer(firstLayer);
+    model.addLayer(new SimpleHiddenLayer("relu", 32));
+//    model.addLayer(new DropoutLayer(0.2));
+    model.addLayer(new SoftmaxOutputLayer(10));
+    
+    model.prepare(regularization);
+    
+    HyperParameter params = {
+        .epochs = 20,
+        .batch = 1000, 
+        .learningRate = 0.012,
+        .lambda = 0.01,
+        .validation_split = 0.2,
+    };
+    
+    Stopwatch watch;
+    model.train(xTrain, yTrain, params);
+    data_t secs = watch.Elapsed();
+//    std::cout << model.trainingLoss().transpose() << std::endl << std::endl;
+    std::cout << model.validationLoss().transpose() << std::endl << std::endl;
+//    data_t testLoss = model.evaluate(xTest, yTest);
+//    std::cout << "test data loss= " << testLoss << std::endl;
+    std::cout << "takes " << secs << " seconds to train." << std::endl;
+//    model.plotLoss(false);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

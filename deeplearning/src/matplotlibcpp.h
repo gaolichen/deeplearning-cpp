@@ -1,4 +1,6 @@
-#pragma once
+#if __cplusplus > 199711L
+#define register      // Deprecated in C++11.
+#endif  // #if __cplusplus > 199711L
 
 // Python headers must be included before any system headers, since
 // they define _POSIX_C_SOURCE

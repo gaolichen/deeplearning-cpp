@@ -11,7 +11,6 @@ std::ostream& operator<< (std::ostream& out, const HyperParameter& params) {
   return out;
 }
 
-
 Model::Model() {
 }
 
@@ -100,7 +99,8 @@ void Model::train(const Matrix& data, const Matrix& y, HyperParameter params) {
     }
     
     // set isTraining to true.
-    for (int i = 0; i < params.epochs; i++) {        
+    for (int i = 0; i < params.epochs; i++) {
+        std::cout << "epoch " << i << std::endl;     
         std::vector<int> v;
         if (params.batch > 0 && params.batch < training.rows()) {
             v = pickRandomIndex(training.rows(), params.batch);
@@ -111,7 +111,7 @@ void Model::train(const Matrix& data, const Matrix& y, HyperParameter params) {
         
         setTraining(true);
         // do forward and backward propagators
-        _propagator->forward(_layers, _weights, _discreteWeight, features);
+        _propagator->forward(_layers, _weights, _discreteWeight, features);        
         _propagator->backward(_layers, _weights, _discreteWeight, labels);
         
         for (int j = 0; j < _layers.size() - 1; j++) {
@@ -134,14 +134,14 @@ void Model::train(const Matrix& data, const Matrix& y, HyperParameter params) {
         if (validation.rows() > 0) {
             _validationLoss[i] = evaluate(validation, validationY);
         }
-        _trainingLoss[i] = evaluate(training, trainingY);
+//        _trainingLoss[i] = evaluate(training, trainingY);
     }
 }
 
 data_t Model::evaluate(const Matrix& testX, const Matrix& testY) {
     SimplePropagator prop;
     prop.forward(_layers, _weights, _discreteWeight, testX);
-    return getOutputLayer()->loss(prop.getResult(), testY);
+    return getOutputLayer()->accuracy(prop.getResult(), testY);
 }
 
 Matrix Model::predict(const Matrix& input) {
@@ -156,6 +156,7 @@ void Model::plotLoss(bool rms) const {
     std::vector<data_t> tLoss;
     std::vector<data_t> vLoss;
     bool smoothData = false;
+    int firstIndex = 1; // skip the first loss.
     if (rms) {
         tLoss = DataUtil::eigenArrayToSTL(_trainingLoss.array().sqrt(), smoothData);
         vLoss = DataUtil::eigenArrayToSTL(_validationLoss.array().sqrt(), smoothData);
@@ -164,11 +165,11 @@ void Model::plotLoss(bool rms) const {
         vLoss = DataUtil::eigenVectorToSTL(_validationLoss, smoothData);
     }
     // Plot a line whose name will show up as "training loss" in the legend.
-    if (tLoss.size() > 0) {
-        plt::named_plot("Training loss", tLoss);
+    if (tLoss.size() > firstIndex) {
+        plt::named_plot("Training loss", std::vector<data_t>(tLoss.begin() + firstIndex, tLoss.end()));
     }
-    if (vLoss.size() > 0) {
-        plt::named_plot("Validation loss", vLoss);
+    if (vLoss.size() > firstIndex) {
+        plt::named_plot("Validation loss", std::vector<data_t>(vLoss.begin() + firstIndex, vLoss.end()));
     }
     
     plt::xlabel("Epoch");

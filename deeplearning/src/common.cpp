@@ -139,24 +139,18 @@ std::vector<int> pickRandomIndex(int range, int n) {
 
 Stopwatch::Stopwatch()
 {
-    start = clock();
+    start = std::chrono::steady_clock::now();
 }
 
 void Stopwatch::Restart()
 {
-        start = clock();
+        start = std::chrono::steady_clock::now();;
 }
 
 std::string Stopwatch::Log(bool restart)
 {
-    double ret = (clock() - start) / (double)CLOCKS_PER_SEC;
-    std::string text = ToString(ret) + " seconds elapsed, current time " + Now();
-    
-    if (restart) {
-        Restart();
-    }
-    
-    return text;
+    double ret = Elapsed(restart);
+    return ToString(ret) + " seconds elapsed, current time " + Now();
 }
 
 std::string Stopwatch::Now()
@@ -171,7 +165,9 @@ std::string Stopwatch::Now()
 /// return how much time in second since last Start() function call
 double Stopwatch::Elapsed(bool restart)
 {
-        double ret = (clock() - start) / (double)CLOCKS_PER_SEC;
-        if (restart) Restart();
-        return ret;
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    int cnt = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    double ret = cnt / 1000.0;
+    if (restart) Restart();
+    return ret;
 }

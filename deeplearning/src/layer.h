@@ -211,6 +211,8 @@ public:
     
     virtual data_t loss(const Matrix& x, const Matrix& y) const = 0;
     
+    virtual data_t accuracy(const Matrix& x, const Matrix& y) const = 0;
+    
     virtual Array gDiff(const Matrix& z) const {
         throw DPLException("should not call OutputLayer.gDiff function.");
     }
@@ -224,16 +226,25 @@ public:
     virtual Matrix delta(const Matrix& x, const Matrix& y) const;
     
     virtual data_t loss(const Matrix& x, const Matrix& y) const;
+    
+    virtual data_t accuracy(const Matrix& x, const Matrix& y) const {
+        return loss(x, y);
+    }
 };
 
 class ClassificationOutputLayer : public OutputLayer {
+private:
+    data_t _threshold;
 public:
-    ClassificationOutputLayer() : OutputLayer("sigmoid", 1) {
+    ClassificationOutputLayer(data_t threshold = 0.5) : OutputLayer("sigmoid", 1) {
+        this->_threshold = threshold;
     }
     
     virtual Matrix delta(const Matrix& x, const Matrix& y) const;
     
     virtual data_t loss(const Matrix& x, const Matrix& y) const;
+    
+    virtual data_t accuracy(const Matrix& x, const Matrix& y) const;
 };
 
 class SoftmaxOutputLayer : public OutputLayer {
@@ -246,6 +257,8 @@ public:
     virtual Matrix delta(const Matrix& x, const Matrix& y) const;
     
     virtual data_t loss(const Matrix& x, const Matrix& y) const;
+    
+    virtual data_t accuracy(const Matrix& x, const Matrix& y) const;
 };
 
 /*

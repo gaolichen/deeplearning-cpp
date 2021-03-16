@@ -10,14 +10,14 @@ void SimplePropagator::forward(
         
     for (int j = 0; j < layers.size(); j++) {
         if (j == 0) {
-            _xList[j] = layers[j]->eval(data);
+            _xList[j].noalias() = layers[j]->eval(data);
             _x0 = firstLayer->evalDiscrete(data);
         } else {
-            _zList[j] = weights[j - 1] * _xList[j - 1];
+            _zList[j].noalias() = weights[j - 1] * _xList[j - 1];
             if (j == 1) {
-                _zList[j] += disWeight * _x0;
+                _zList[j].noalias() += disWeight * _x0;
             }
-            _xList[j] = layers[j]->eval(_zList[j]);
+            _xList[j].noalias() = layers[j]->eval(_zList[j]);
         }
     }
 }
@@ -34,8 +34,7 @@ void SimplePropagator::backward(const std::vector<Layer*>& layers,
             std::cout << "_xList[j].cols()=" << _xList[j].cols() << ", delta.rows()=" << delta.rows() << std::endl; 
             throw DPLException("SimplePropagator::backward: size of matrix delta is incorrect.");
         }
-//        _weightChanges[j] = (_xList[j] * delta).transpose();
-        _weightChanges[j] = delta.transpose() * _xList[j].transpose();
+        _weightChanges[j].noalias() = delta.transpose() * _xList[j].transpose();
         if (j == 0) {
             // compute change of discrete weight.
             _disWeightChange = (_x0 * delta).transpose();

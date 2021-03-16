@@ -2,6 +2,7 @@
 #pragma warning(disable : 4267)
 #define NATIVE_INT
 #define NATIVE_FLOAT
+//#define EIGEN_USE_BLAS	
 
 #define PITEM(p) ((p) & 0xff)
 #define PVAL(p) ((p) >> 8)
@@ -17,6 +18,7 @@
 #include <sstream>
 #include <ctime>
 #include <limits>
+#include <chrono>
 #include <Eigen/Dense>
 #include "Colormod.h"
 
@@ -50,7 +52,7 @@ typedef u128 intN;
 #endif 
 
 #ifdef NATIVE_FLOAT
-typedef long double data_t;
+typedef double data_t;
 #else
 typedef cpp_dec_float_50 data_t; 
 #endif
@@ -220,7 +222,7 @@ std::vector<int> pickRandomIndex(int range, int n);
 class Stopwatch
 {
 private:
-	clock_t start;
+	std::chrono::steady_clock::time_point start;
 public:
 	Stopwatch();
 	void Restart();

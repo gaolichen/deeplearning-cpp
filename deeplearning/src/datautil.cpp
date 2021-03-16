@@ -112,6 +112,64 @@ Vector DataUtil::randomDropoutVector(int size, data_t dropRate, const std::vecto
     return ret;
 }
 
+#define BYTE2INT(buf) (((unsigned char)buf[0] << 24) + ((unsigned char)buf[1] << 16) + ((unsigned char)buf[2] << 8) + (unsigned char)buf[3])
+
+void DataUtil::readMNISTimage(std::string path, Matrix& data, bool normalize) {
+    std::ifstream fin (path.c_str(), std::ios::in | std::ios::binary);
+    char *buf = new char[28 * 28 + 1];
+    fin.read(buf, 4);
+    fin.read(buf, 4);
+    int count = BYTE2INT(buf);
+    
+    fin.read(buf, 4);
+    int r = BYTE2INT(buf);
+    fin.read(buf, 4);
+    int c = BYTE2INT(buf);
+    std::cout << "count=" << count << ", r=" << r << ", c=" << c << std::endl;
+    data.resize(count, r * c);
+    for (int i = 0; i < count; i++) {
+        fin.read(buf, r * c);
+        for (int j = 0; j < r * c; j++) {
+            if (normalize) {
+                data(i, j) = (unsigned char)buf[j] / 255.0;
+            } else {
+                data(i, j) = (unsigned char)buf[j];
+            }
+        }
+    }
+    
+    delete[] buf;
+    fin.close();
+}
+
+void DataUtil::readMNISTlabel(std::string path, Vector& data) {
+    std::ifstream fin (path.c_str(), std::ios::in | std::ios::binary);
+    char *buf = new char[10];
+    fin.read(buf, 4);
+    fin.read(buf, 4);
+    int count = BYTE2INT(buf);
+    std::cout << "count=" << count << std::endl;
+    data.resize(count);
+    for (int i = 0; i < count; i++) {
+        fin.read(buf, 1);
+        data(i) = (unsigned char)buf[0];
+    }
+    
+    delete[] buf;
+    fin.close();
+}
+
+void DataUtil::showMNISTimage(const RVector& row) {
+    for (int i = 0; i < 28; i++) {
+        for (int j = 0; j < 28; j++) {
+            std::cout << std::setw(3) << row(i * 28 + j) << ' ';
+        }
+        std::cout << std::endl;
+    }
+    
+    std::cout << std::endl;
+}
+
 void CSVData::read(std::string path, bool hasHeader) {
     std::ifstream fin;
     fin.open(path);

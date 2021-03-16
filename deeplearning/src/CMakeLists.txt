@@ -14,8 +14,12 @@ function(enable_cxx_compiler_flag_if_supported flag)
 endfunction()
 
 # example usage
+enable_cxx_compiler_flag_if_supported("-msse2")
+enable_cxx_compiler_flag_if_supported("-AVX")
+enable_cxx_compiler_flag_if_supported("-FMA")
+enable_cxx_compiler_flag_if_supported("-march=native")
 #enable_cxx_compiler_flag_if_supported("-Wall")
-enable_cxx_compiler_flag_if_supported("-Werror")
+#enable_cxx_compiler_flag_if_supported("-Werror")
 #enable_cxx_compiler_flag_if_supported("-Wextra")
 #enable_cxx_compiler_flag_if_supported("-pedantic")
 
@@ -66,25 +70,19 @@ file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/*.cpp)
 
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR} eigen)
 INCLUDE_DIRECTORIES (${Python2_INCLUDE_DIRS} ${Python2_NumPy_INCLUDE_DIRS})
-#target_link_libraries(dpl Python2::Python Python2::NumPy)
-
-
-#find_package(Boost 1.70)
-
-#find_package(Boost 1.70 REQUIRED COMPONENTS
-#             unit_test_framework)
 
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
     add_library (dpllib STATIC ${DPL_LIB_SRCS})
     add_executable (dpl ${DPL_MAIN_SRCS})
-    target_link_libraries(dpl ${Boost_LIBRARIES} dpllib Python2::Python Python2::NumPy)
-
+    target_link_libraries(dpl ${Boost_LIBRARIES} dpllib Python2::Python Python2::NumPy OpenMP::OpenMP_CXX)
+#    target_link_libraries(dpl ${Boost_LIBRARIES} dpllib ${BLAS_LIBRARIES} Python2::Python Python2::NumPy)
+    
     # the test code depends on c++ 11. Support of c++0x is not enough.
     # if the compiler does not support c++11, do not build test code.
     if(NOT WIN32)
         add_executable(dpltest ${TEST_SRCS})
-        target_link_libraries(dpltest ${Boost_LIBRARIES} dpllib dpllib Python2::Python Python2::NumPy)
+        target_link_libraries(dpltest ${Boost_LIBRARIES} dpllib Python2::Python Python2::NumPy OpenMP::OpenMP_CXX)
         add_test(NAME bstest COMMAND bstest)
     endif()
 endif()

@@ -29,6 +29,12 @@ public:
     static Array colWiseStd(const Matrix& mat);
     
     static Vector randomDropoutVector(int size, data_t dropRate, const std::vector<int>& noDropPositions);
+    
+    static void readMNISTimage(std::string path, Matrix& data, bool normalize = false);
+    
+    static void readMNISTlabel(std::string path, Vector& data);
+    
+    static void showMNISTimage(const RVector& row);
 };
 
 class CSVData {

@@ -351,11 +351,12 @@ BOOST_DATA_TEST_CASE(SoftmaxOutputLayer_eval_test, bdata::random(2, 10) ^ bdata:
 BOOST_DATA_TEST_CASE(SoftmaxOutputLayer_loss_test, bdata::random(2, 10) ^ bdata::random(2, 10) ^ bdata::xrange(20), testcases, units, index)
 {
     Matrix x = Matrix::Zero(testcases, units);
-    Matrix y = Matrix::Zero(testcases, units);
+    Matrix y = Vector::Zero(testcases);
     
     for (int i = 0; i < testcases; i++) {
         int r = random64(units - 1);
-        x(i, r) = y(i, r) = 1.0;
+        x(i, r) = 1.0;
+        y(i) = r;
     }
     
     SoftmaxOutputLayer layer(units);
@@ -370,11 +371,12 @@ BOOST_DATA_TEST_CASE(SoftmaxOutputLayer_loss_test, bdata::random(2, 10) ^ bdata:
 
 BOOST_DATA_TEST_CASE(SoftmaxOutputLayer_delta_test, bdata::random(2, 10) ^ bdata::random(2, 10) ^ bdata::xrange(20), testcases, units, index)
 {
-    Matrix y = Matrix::Zero(testcases, units);
+    //Matrix y = Matrix::Zero(testcases, units);
+    Vector y = Vector::Zero(testcases);
     
     for (int i = 0; i < testcases; i++) {
         int r = random64(units - 1);
-        y(i, r) = 1.0;
+        y(i) = 1.0;
     }
     
     SoftmaxOutputLayer layer(units);    
@@ -399,10 +401,12 @@ BOOST_DATA_TEST_CASE(SoftmaxOutputLayer_delta_test, bdata::random(2, 10) ^ bdata
 
 BOOST_DATA_TEST_CASE(SoftmaxOutputLayer_delta_test2, bdata::random(50, 100) ^ bdata::random(3, 10) ^ bdata::xrange(20), testcases, units, index)
 {
-    Matrix y = Matrix::Zero(testcases, units);
+//    Matrix y = Matrix::Zero(testcases, units);
+    Vector y = Vector::Zero(testcases);
     for (int i = 0; i < testcases; i++) {
         int r = random64(units - 1);
-        y(i, r) = 1.0;
+//        y(i, r) = 1.0;
+        y(i) = r;
     }
     
     SoftmaxOutputLayer layer(units);

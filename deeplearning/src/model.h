@@ -24,6 +24,9 @@ private:
     Vector _trainingLoss;
     Vector _validationLoss;
     
+    Vector _trainingAccuracy;
+    Vector _validationAccuracy;
+    
     void setTraining(bool isTraining);
 public:
     Model();
@@ -43,6 +46,14 @@ public:
     
     const Vector& validationLoss() {
         return _validationLoss;
+    }
+    
+    const Vector& validationAccuracy() {
+        return _validationAccuracy;
+    }
+    
+    const Vector& trainingAccuracy() {
+        return _trainingAccuracy;
     }
     
     void plotLoss(bool rms = false) const;
