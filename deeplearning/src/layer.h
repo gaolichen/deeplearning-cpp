@@ -1,6 +1,6 @@
 #pragma once
 #include "common.h"
-#include "node.h"
+#include "activation.h"
 #include "datautil.h"
 #include "onehot.h"
 #include "featurecolumn.h"

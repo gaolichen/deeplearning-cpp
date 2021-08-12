@@ -33,7 +33,6 @@ SET(DPL_LIB_SRCS
 	common.cpp
 	layer.cpp
 	model.cpp
-	node.cpp
 	loss.cpp
 	regularization.cpp
 	datautil.cpp
