@@ -320,8 +320,8 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
 BOOST_AUTO_TEST_CASE(ca_house)
 {
     CSVData csvTrain, csvTest;
-    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
-    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    csvTrain.read("./testdata/california_housing_train.csv", true);
+    csvTest.read("./testdata/california_housing_test.csv", true);
     
     std::cout << csvTrain.headers() << std::endl;
     std::cout << csvTest.headers() << std::endl;
@@ -372,8 +372,8 @@ BOOST_AUTO_TEST_CASE(ca_house)
 BOOST_AUTO_TEST_CASE(ca_house2)
 {
     CSVData csvTrain, csvTest;
-    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
-    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    csvTrain.read("./testdata/california_housing_train.csv", true);
+    csvTest.read("./testdata/california_housing_test.csv", true);
     
     Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
     Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
@@ -434,8 +434,8 @@ BOOST_AUTO_TEST_CASE(ca_house2)
 BOOST_AUTO_TEST_CASE(ca_house3)
 {
     CSVData csvTrain, csvTest;
-    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
-    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    csvTrain.read("./testdata/california_housing_train.csv", true);
+    csvTest.read("./testdata/california_housing_test.csv", true);
     
     Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
     Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
@@ -500,8 +500,8 @@ BOOST_AUTO_TEST_CASE(ca_house3)
 BOOST_AUTO_TEST_CASE(ca_house4)
 {
     CSVData csvTrain, csvTest;
-    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
-    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    csvTrain.read("./testdata/california_housing_train.csv", true);
+    csvTest.read("./testdata/california_housing_test.csv", true);
     
     Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
     Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
@@ -563,8 +563,8 @@ BOOST_AUTO_TEST_CASE(ca_house4)
 BOOST_AUTO_TEST_CASE(ca_house5)
 {
     CSVData csvTrain, csvTest;
-    csvTrain.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_train.csv", true);
-    csvTest.read("/home/gaolichen/gitroot/prototype/deeplearning/california_housing_test.csv", true);
+    csvTrain.read("./testdata/california_housing_train.csv", true);
+    csvTest.read("./testdata/california_housing_test.csv", true);
     
     Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
     Matrix testData = DataUtil::randomRowShuffle(csvTest.data());

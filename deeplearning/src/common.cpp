@@ -16,11 +16,7 @@ Color::Modifier def(Color::FG_DEFAULT);
 Color::Modifier green(Color::FG_GREEN);
 Color::Modifier yellow(Color::FG_YELLOW);
 
-
-long double logint[MAX_COUNT + 1];
-long double logfactorial[MAX_COUNT + 1];
 double Pi = acos(-1.0);
-intN bionomial[MAX_N + 1][MAX_N + 1];
 
 std::ostream& operator<< (std::ostream& out, LogLevel level) {
     if (level == Info) {
@@ -34,34 +30,6 @@ std::ostream& operator<< (std::ostream& out, LogLevel level) {
     }
 }
 
-long double LogInt(int n)
-{
-	if (n == 0) {
-		std::cout << "error! log(0)" << std::endl;
-		return std::numeric_limits<long double>::max();
-	}
-	if (n == 1) return 0.0;
-
-	if (logint[n] == 0.0) {
-		logint[n] = logl(n);
-	}
-	
-	return logint[n];
-}
-
-long double LogFactorial(int n)
-{
-	if (n == 1 || n == 0) return 0.0;
-
-	if (logfactorial[n] == 0.0) {
-		for (int i = 2; i <= n; i++) {
-			logfactorial[n] += LogInt(i);
-		}
-	}
-
-	return logfactorial[n];
-}
-
 data_t random(data_t min, data_t max)
 {
     return min + (max - min) * dist01(rng);
@@ -73,15 +41,6 @@ i64 random64(i64 max)
     return dist(rng);
 }
 
-u128 random128(u128 max)
-{
-    boost::random::uniform_int_distribution<u64> high(0, (u64)(max >> 64));
-    boost::random::uniform_int_distribution<u64> low(0, (u64)(max & std::numeric_limits<u64>::max()));
-
-    return (((u128)high(rng)) << 64) | low(rng);
-}
-
-
 double EuclideanDist(double x1, double y1, double x2, double y2)
 {
 	return sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
@@ -90,18 +49,6 @@ double EuclideanDist(double x1, double y1, double x2, double y2)
 double EuclideanDistSquare(double x1, double y1, double x2, double y2)
 {
 	return (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
-}
-
-intN BioCoeff(int n, int k)
-{
-	if (k > n) return 0;
-	if (k == 0 || k == n) return 1;
-	intN& ret = bionomial[n][k];
-	if (ret == 0) {
-		ret = BioCoeff(n - 1, k) + BioCoeff(n - 1, k - 1);
-	}
-
-	return ret;
 }
 
 std::vector<int> pickRandomIndexInner(int range, int n) {

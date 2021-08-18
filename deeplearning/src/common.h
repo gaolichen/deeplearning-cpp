@@ -4,10 +4,6 @@
 #define NATIVE_FLOAT
 //#define EIGEN_USE_BLAS	
 
-#define PITEM(p) ((p) & 0xff)
-#define PVAL(p) ((p) >> 8)
-#define MAKEP(n, v) (((v) << 8) | (n))
-
 #include <iostream>
 #include <iterator>
 #include <sstream>
@@ -22,16 +18,6 @@
 #include <Eigen/Dense>
 #include "Colormod.h"
 
-#ifndef NATIVE_FLOAT
-#include <boost/multiprecision/cpp_dec_float.hpp>
-using boost::multiprecision::cpp_dec_float_50;
-#endif
-
-//#ifndef NATIVE_INT
-#include <boost/multiprecision/cpp_int.hpp>
-//#endif
-
-
 #if WIN32
 typedef __int64 i64;
 typedef unsigned __int64 u64;
@@ -40,36 +26,10 @@ typedef long long i64;
 typedef unsigned long long u64;
 #endif
 
-typedef boost::multiprecision::uint128_t u128;
-
-#ifdef NATIVE_INT
 typedef u64 intN;
-#define MAX_BIT 6
-#else
-#define MAX_BIT 7
-//typedef boost::multiprecision::uint512_t intN;
-typedef u128 intN;
-#endif 
-
-#ifdef NATIVE_FLOAT
 typedef double data_t;
-#else
-typedef cpp_dec_float_50 data_t; 
-#endif
 
-#define MAX_N (1<<MAX_BIT)
-
-// MAX_COUNT is used by PartitionNumber and FreDistanceCalc classes.
-// 1500 is the max value for PartitionNumber return values in range of type u128.
-#define MAX_COUNT 1500
 #define EPS 1e-10
-
-#if MAX_COUNT > 400
-#define PARTITION_NUMBER_128
-typedef u128 count_t;
-#else
-typedef i64 count_t;
-#endif
 
 typedef Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic> Matrix;
 typedef Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic> MatrixI;
@@ -80,9 +40,6 @@ typedef Eigen::PermutationMatrix<Eigen::Dynamic,Eigen::Dynamic> PermutationMatri
 enum LogLevel {Info = 0, Warning = 1, Error = 2, Off = 100 };
 
 extern double Pi;
-extern long double logint[MAX_COUNT + 1];
-extern long double logfactorial[MAX_COUNT + 1];
-extern intN bionomial[MAX_N + 1][MAX_N + 1];
 
 extern boost::random::mt19937 rng;
 extern boost::random::uniform_01<data_t> dist01;
@@ -120,9 +77,6 @@ long double LogFactorial(int n);
 
 // return random integer between 0 and max, including max
 i64 random64(i64 max);
-
-// return random integer between 0 and max, including max
-u128 random128(u128 max);
 
 data_t random(data_t min, data_t max);
 

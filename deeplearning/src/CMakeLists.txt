@@ -66,6 +66,8 @@ SET(DPL_MAIN_SRCS
 
 #I like to keep test files in a separate source directory called test
 file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/*.cpp)
+# copy test data to destination
+file(COPY test/testdata DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR} eigen)
 INCLUDE_DIRECTORIES (${Python2_INCLUDE_DIRS} ${Python2_NumPy_INCLUDE_DIRS})

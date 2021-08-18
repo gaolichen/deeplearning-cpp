@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iomanip>
 #include "datautil.h"
 
 void DataUtil::appendColumnProduct(Matrix& mat, std::vector<int> cols) {
