@@ -10,7 +10,25 @@
 - 支持Onehot表示
 - 用[Eigen](https://eigen.tuxfamily.org/)做底层的矩阵运算
 
-不支持GPU运算，也没有graph模式运算，所以运行效率无法满足实际应用的需求。
+## 配置运行环境
+在linux环境下，安装以下模块:
+- 安装[CMake](https://cmake.org/)
+- 安装[C++ Boost Library](https://www.boost.org/)
+- 安装[OpenBLAS](https://www.openblas.net/)
 
+修改deeplearning目录下的[CMakeList.txt](https://github.com/gaolichen/deeplearning-cpp/blob/main/deeplearning/CMakeLists.txt) 文件
+
+
+```
+SET(BOOST_ROOT ${MYDEV}/boost_1_70_0) => SET(BOOST_ROOT /path/to/boost/directory)
+
+SET(BLAS_LIBRARIES /opt/OpenBLAS/lib/libopenblas.so) => SET(BLAS_LIBRARIES /path/to/libopenblas.so)
+
+```
+
+## 如何运行
+- 在deeplearning目录下创建build目录
+- 在build目录下运行命令行 `cmake ..`和`make`
+- 在`build/src`目录下，输入`./dpltest`运行单元测试，输入`./dpltest --run_test=Demo_suite`运行demo任务
 
 
