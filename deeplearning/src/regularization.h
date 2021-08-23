@@ -15,7 +15,7 @@ public:
 class L2 : public Regularization {
 public:
     L2() {
-        std::cout << "L2 regularization is created." << std::endl;
+        //std::cout << "L2 regularization is created." << std::endl;
     }
     virtual data_t complixity(const Matrix& weight);
     
@@ -25,7 +25,7 @@ public:
 class L1 : public Regularization {
 public:
     L1() {
-        std::cout << "L1 regularization is created." << std::endl;
+        //std::cout << "L1 regularization is created." << std::endl;
     }
     
     virtual data_t complixity(const Matrix& weight);

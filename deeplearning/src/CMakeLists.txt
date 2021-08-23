@@ -39,6 +39,7 @@ SET(DPL_LIB_SRCS
 	propagator.cpp
 	featurecolumn.cpp
 	onehot.cpp
+	progressbar.cpp
 )
 
 IF(WIN32)
@@ -55,6 +56,7 @@ IF(WIN32)
     	propagator.h
     	featurecolumn.h
     	onehot.h
+	    progressbar.h
 	)
 	source_group("Header Files" FILES *.h)
 ENDIF(WIN32)

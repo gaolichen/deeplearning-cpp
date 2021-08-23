@@ -10,6 +10,7 @@
 #include "common.h"
 #include "datautil.h"
 #include "matplotlibcpp.h"
+#include "progressbar.h"
 using namespace std;
 namespace plt = matplotlibcpp;
 
@@ -58,11 +59,21 @@ void TestIndexing() {
     std::cout << "mat3=" << mat3 << std::endl;
 }
 
+void TestProgressBar() {
+    for (int k = 0; k < 10; k++) {
+        std::cout << "epoch " << k << std::endl;
+        ProgressBar bar("Epoch " + ToString(k) + "/10", 67);
+        for (int i = 0; i < 67; i++) {
+            SHOW_PROGRESS(bar, i, "loss=" << i/100.0);
+        }
+    }
+}
+
 int main(int argc, char* argv[])
 {
     std::cout << "deep learning..." << std::endl;
 
-    TestMatrix();
+    TestProgressBar();
 //    TestIndexing();
 	return 0;
 }

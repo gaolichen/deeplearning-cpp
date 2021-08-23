@@ -38,19 +38,17 @@ BOOST_AUTO_TEST_CASE(demo_random_input)
     
 //    Vector loss = model.train(data, y, epic, learningRate, lambda);
     HyperParameter params = {
-        .epochs = 100,
-        .batch = -1, 
+        .epochs = 5,
+        .batchSize = 32, 
         .learningRate = 0.01,
         .lambda = 0.001,
     };
 
     model.train(data, y, params);
-    std::cout << "training loss=" << model.trainingLoss() << std::endl;
-        
+    
     RVector input = RVector::Random(featureSize);
-    std::cout << "input=" << input << std::endl;
-    std::cout << "output=" << model.predict(input) << std::endl;
-    std::cout << "demo end." << std::endl;
+    std::cout << "predict input=" << input << std::endl;
+    std::cout << "predict output=" << model.predict(input) << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE(demo_line)
@@ -80,35 +78,34 @@ BOOST_AUTO_TEST_CASE(demo_line)
     }
     
     HyperParameter params = {
-        .epochs = 3000,
-        .batch = 100, 
+        .epochs = 100,
+        .batchSize = 100, 
         .learningRate = 0.05,
         .lambda = 0.01,
+        .validation_split = 0.1,
     };
     
     Stopwatch watch;
     model.train(data, y, params);
+    
     double sec = watch.Elapsed();
-    std::cout << "training loss=" << model.trainingLoss().transpose() << std::endl;
-    for (int i = 0; i < model.weights().size(); i++) {
-        std::cout << "weight " << i << std::endl;
-        std::cout << model.weights()[i] << std::endl;
-    }
     
     int testcases = 20;
+    int failure = 0;
     Matrix input = Matrix::Random(testcases, 2);
     Matrix output = model.predict(input);
 
     for (int i = 0; i < testcases; i++) {
-        std::cout << "test " << i << std::endl;
-        std::cout << "input=" << input.row(i) << " output=" << output.row(i);
         if ((output(i, 0) > 0.5) == (input(i, 0) > input(i, 1))) {
-            std::cout << " passed" << std::endl;
+            // do nothing for passed.
         } else {
+            std::cout << "test " << i << std::endl;
+            std::cout << "input=" << input.row(i) << " output=" << output.row(i);
             std::cout << " failed" << std::endl;
         }
     }
     
+    std::cout << failure << " test cases failed." << std::endl;    
     std::cout << "takes " << sec << " seconds to train the model." << std::endl;
 }
 
@@ -129,9 +126,7 @@ BOOST_AUTO_TEST_CASE(demo_circle)
             y(i) = 0.0;
         }
     }
-    
-    std::cout << "y.size()=" << y.size() << ", y.sum()=" << y.sum() << std::endl;
-    
+        
     Model model;
     FirstLayer* firstLayer = new FirstLayer();
     firstLayer->addFeatureColumn(new NumericCrossColumn({0, 0}));
@@ -145,28 +140,31 @@ BOOST_AUTO_TEST_CASE(demo_circle)
     model.prepare();
 
     HyperParameter params = {
-        .epochs = 2000,
-        .batch = 100, 
+        .epochs = 20,
+        .batchSize = 100, 
         .learningRate = 0.03,
         .lambda = 0.001,
+        .validation_split = 0.1,
     };
 
-    model.train(data, y, params);    
-    std::cout << "training loss=" << model.trainingLoss().transpose() << std::endl;
+    model.train(data, y, params);
     
     int testcases = 20;
+    int failures = 0;
     Matrix input = Matrix::Random(testcases, 2);
     Matrix output = model.predict(input);
     
     for (int i = 0; i < testcases; i++) {
-        std::cout << "test " << i << std::endl; 
-        std::cout << "input=" << input.row(i) << " output=" << output.row(i);
         if ((output(i, 0) > 0.5) == (input.row(i).norm() < r)) {
-            std::cout << " passed" << std::endl;
+            // do nothing
         } else {
+            std::cout << "test " << i << std::endl; 
+            std::cout << "input=" << input.row(i) << " output=" << output.row(i);
             std::cout << " failed" << std::endl;
+            failures ++;
         }
     }
+    std::cout << failures << " out of " << testcases << " test cases failed." << std::endl;
 }
 
 int quadrant(data_t x, data_t y) {
@@ -216,8 +214,8 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
     }
         
     HyperParameter params = {
-        .epochs = 5000,
-        .batch = 100, 
+        .epochs = 100,
+        .batchSize = 32, 
         .learningRate = 0.05,
         .lambda = 0.001,
         .validation_split = 0.2,
@@ -226,13 +224,7 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
     Stopwatch watch;
     model.train(data, y, params);
     double sec = watch.Elapsed();
-    
-    for (int i = 0; i < model.weights().size(); i++) {
-        std::cout << "weight " << i << std::endl;
-        std::cout << model.weights()[i] << std::endl;
-    }
-    
-    std::cout << "validation loss=" << model.validationLoss().transpose() << std::endl;
+        
     model.plotLoss();
     
     Matrix input = Matrix::Random(20, 2);
@@ -242,8 +234,7 @@ BOOST_AUTO_TEST_CASE(demo_softmax)
     }
     
     data_t accuracy = model.evaluate(input, expected);
-    std::cout << "test accuracy = " << accuracy << std::endl;
-    
+    std::cout << "test loss = " << accuracy << std::endl;
     std::cout << "takes " << sec << " seconds to train the model." << std::endl;
 }
 
@@ -251,7 +242,7 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
 {
     std::cout << "runnng demo_softmax2." << std::endl;
     Model model;
-    size_t dataSize = 100;
+    size_t dataSize = 1000;
     size_t featureSize = 2;
     size_t hiddenLayerSize = 0;
     std::string regularization = "L2";
@@ -265,7 +256,6 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
     model.prepare(regularization);
     
     Matrix data = Matrix::Random(dataSize, featureSize);
-//    Matrix y(dataSize, 2);
     Vector y(dataSize);
     for (int i = 0; i < data.rows(); i++) {
         if (data(i, 0) > data(i, 1)) {
@@ -274,13 +264,10 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
             y(i) = 1;
         }
     }
-    
-//    std::cout << "data=" << std::endl << data << std::endl << std::endl;
-//    std::cout << "y=" << std::endl << y << std::endl << std::endl;
-    
+        
     HyperParameter params = {
-        .epochs = 5000,
-        .batch = 100, 
+        .epochs = 50,
+        .batchSize = 32, 
         .learningRate = 0.005,
         .lambda = 0.001,
     };
@@ -288,32 +275,30 @@ BOOST_AUTO_TEST_CASE(demo_softmax2)
     Stopwatch watch;
     model.train(data, y, params);
     double sec = watch.Elapsed();
-    std::cout << "training loss=" << model.trainingLoss().transpose() << std::endl;
-    for (int i = 0; i < model.weights().size(); i++) {
-        std::cout << "weight " << i << std::endl;
-        std::cout << model.weights()[i] << std::endl;
-    }
-    
     Matrix input = Matrix::Random(20, 2);
-//    Matrix expected(20, 2);
     Vector expected(20);
     for (int i = 0; i < input.rows(); i++) {
         if (input(i, 0) > input(i, 1)) {
             expected(i) = 0;
-//            expected(i, 1) = 0;
         } else {
             expected(i) = 1;
-//            expected(i, 0) = 0;
         }
     }
     
     Matrix res = model.predict(input);
+    int failures = 0;
 
     for (int i = 0; i < 20; i++) {
+        if ((res(i, 0) >= 0.5) == (expected(i) < 1)) {
+            // succeed
+            continue;
+        }
+        
         std::cout << "test " << i << std::endl;
-        std::cout << "res = " << res.row(i) << ", expected=" << expected.row(i) << std::endl;
+        std::cout << "res = " << res.row(i) << ", expected=" << expected(i) << std::endl;
+        failures++;
     }
-    
+    std::cout << failures << "/20 test cases failed." << std::endl; 
     std::cout << "takes " << sec << " seconds to train the model." << std::endl;
 }
 
@@ -328,8 +313,6 @@ BOOST_AUTO_TEST_CASE(ca_house)
     
     Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
     Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
-//    Matrix trainData = csvTrain.data();
-//    Matrix testData = csvTest.data();
     
     int featureCol = csvTrain.headerIndex("\"median_income\"");
     int labelCol = csvTrain.headerIndex("\"median_house_value\"");
@@ -354,18 +337,15 @@ BOOST_AUTO_TEST_CASE(ca_house)
     
     HyperParameter params = {
         .epochs = 70,
-        .batch = 100, 
+        .batchSize = 32, 
         .learningRate = 0.08    ,
         .lambda = 0.0,
         .validation_split = 0.2,
     };
     
     model.train(trainData, trainData.col(labelCol), params);
-    std::cout << model.trainingLoss().array().sqrt().transpose() << std::endl << std::endl;
-    std::cout << model.validationLoss().array().sqrt().transpose() << std::endl << std::endl;
     std::cout << "test data loss rms= " << sqrt(model.evaluate(testData, testData.col(labelCol))) << std::endl;
     model.plotLoss(true);
-    
 }
 
 // test discrete cross column
@@ -418,15 +398,13 @@ BOOST_AUTO_TEST_CASE(ca_house2)
     
     HyperParameter params = {
         .epochs = 35,
-        .batch = 100, 
+        .batchSize = 100, 
         .learningRate = 0.04    ,
         .lambda = 0.001,
         .validation_split = 0.2,
     };
     
     model.train(trainData, trainData.col(labelCol), params);
-    std::cout << model.trainingLoss().array().sqrt().transpose() << std::endl << std::endl;
-    std::cout << model.validationLoss().array().sqrt().transpose() << std::endl << std::endl;
     std::cout << "test data loss rms= " << sqrt(model.evaluate(testData, testData.col(labelCol))) << std::endl;
     model.plotLoss(true);
 }
@@ -483,15 +461,13 @@ BOOST_AUTO_TEST_CASE(ca_house3)
     
     HyperParameter params = {
         .epochs = 100,
-        .batch = 1000, 
+        .batchSize = 1000, 
         .learningRate = 0.05,
         .lambda = 0.00,
-        .validation_split = 0,
+        .validation_split = 0.2,
     };
     
     model.train(trainData, trainData.col(labelCol), params);
-    std::cout << model.trainingLoss().transpose() << std::endl << std::endl;
-    std::cout << model.validationLoss().transpose() << std::endl << std::endl;
     data_t testLoss = model.evaluate(testData, testData.col(labelCol));
     std::cout << "test data loss= " << testLoss << std::endl;
     model.plotLoss(false);
@@ -546,15 +522,13 @@ BOOST_AUTO_TEST_CASE(ca_house4)
     
     HyperParameter params = {
         .epochs = 100,
-        .batch = 1000, 
+        .batchSize = 100,
         .learningRate = 0.05,
         .lambda = 0.00,
-        .validation_split = 0,
+        .validation_split = 0.2,
     };
     
     model.train(trainData, trainData.col(labelCol), params);
-    std::cout << model.trainingLoss().transpose() << std::endl << std::endl;
-    std::cout << model.validationLoss().transpose() << std::endl << std::endl;
     data_t testLoss = model.evaluate(testData, testData.col(labelCol));
     std::cout << "test data loss= " << testLoss << std::endl;
     model.plotLoss(false);
@@ -568,8 +542,8 @@ BOOST_AUTO_TEST_CASE(ca_house5)
     
     Matrix trainData = DataUtil::randomRowShuffle(csvTrain.data());
     Matrix testData = DataUtil::randomRowShuffle(csvTest.data());
-    
     trainData = DataUtil::zScoreNormalize(trainData);
+    
     testData = DataUtil::zScoreNormalize(testData);
     int labelCol = csvTrain.headerIndex("\"median_house_value\"");
     int medianIncomeCol = csvTrain.headerIndex("\"median_income\"");
@@ -609,16 +583,14 @@ BOOST_AUTO_TEST_CASE(ca_house5)
     model.prepare(regularization);
     
     HyperParameter params = {
-        .epochs = 200,
-        .batch = 4000, 
+        .epochs = 50,
+        .batchSize = 4000, 
         .learningRate = 0.028,
         .lambda = 0.01,
         .validation_split = 0.2,
     };
     
     model.train(trainData, trainData.col(labelCol), params);
-    std::cout << model.trainingLoss().transpose() << std::endl << std::endl;
-    std::cout << model.validationLoss().transpose() << std::endl << std::endl;
     data_t testLoss = model.evaluate(testData, testData.col(labelCol));
     std::cout << "test data loss= " << testLoss << std::endl;
     model.plotLoss(false);
@@ -626,14 +598,14 @@ BOOST_AUTO_TEST_CASE(ca_house5)
 
 BOOST_AUTO_TEST_CASE(demo_MNIST)
 {
-    Eigen::setNbThreads(4);
+    //Eigen::setNbThreads(4);
     std::cout << "number of threads: " << Eigen::nbThreads() << std::endl;
     Matrix xTrain, xTest;
     Vector yTrain, yTest;
-    std::string xTrainPath = "/home/gaolichen/gitroot/prototype/deeplearning/mnist/train-images-idx3-ubyte";
-    std::string xTestPath = "/home/gaolichen/gitroot/prototype/deeplearning/mnist/t10k-images-idx3-ubyte";
-    std::string yTrainPath = "/home/gaolichen/gitroot/prototype/deeplearning/mnist/train-labels-idx1-ubyte";
-    std::string yTestPath = "/home/gaolichen/gitroot/prototype/deeplearning/mnist/t10k-labels-idx1-ubyte";
+    std::string xTrainPath = "./testdata/train-images-idx3-ubyte";
+    std::string xTestPath = "./testdata/t10k-images-idx3-ubyte";
+    std::string yTrainPath = "./testdata/train-labels-idx1-ubyte";
+    std::string yTestPath = "./testdata/t10k-labels-idx1-ubyte";
     
     DataUtil::readMNISTimage(xTrainPath, xTrain, true);
     DataUtil::readMNISTimage(xTestPath, xTest, true);
@@ -650,14 +622,14 @@ BOOST_AUTO_TEST_CASE(demo_MNIST)
         
     model.addLayer(firstLayer);
     model.addLayer(new SimpleHiddenLayer("relu", 32));
-//    model.addLayer(new DropoutLayer(0.2));
+    //model.addLayer(new DropoutLayer(0.2));
     model.addLayer(new SoftmaxOutputLayer(10));
     
     model.prepare(regularization);
     
     HyperParameter params = {
         .epochs = 20,
-        .batch = 1000, 
+        .batchSize = 256, 
         .learningRate = 0.012,
         .lambda = 0.01,
         .validation_split = 0.2,
@@ -666,10 +638,8 @@ BOOST_AUTO_TEST_CASE(demo_MNIST)
     Stopwatch watch;
     model.train(xTrain, yTrain, params);
     data_t secs = watch.Elapsed();
-//    std::cout << model.trainingLoss().transpose() << std::endl << std::endl;
-    std::cout << model.validationLoss().transpose() << std::endl << std::endl;
-//    data_t testLoss = model.evaluate(xTest, yTest);
-//    std::cout << "test data loss= " << testLoss << std::endl;
+    data_t testLoss = model.evaluate(xTest, yTest);
+    std::cout << "test data loss= " << testLoss << std::endl;
     std::cout << "takes " << secs << " seconds to train." << std::endl;
 //    model.plotLoss(false);
 }

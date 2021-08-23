@@ -126,7 +126,6 @@ void DataUtil::readMNISTimage(std::string path, Matrix& data, bool normalize) {
     int r = BYTE2INT(buf);
     fin.read(buf, 4);
     int c = BYTE2INT(buf);
-    std::cout << "count=" << count << ", r=" << r << ", c=" << c << std::endl;
     data.resize(count, r * c);
     for (int i = 0; i < count; i++) {
         fin.read(buf, r * c);
@@ -149,7 +148,6 @@ void DataUtil::readMNISTlabel(std::string path, Vector& data) {
     fin.read(buf, 4);
     fin.read(buf, 4);
     int count = BYTE2INT(buf);
-    std::cout << "count=" << count << std::endl;
     data.resize(count);
     for (int i = 0; i < count; i++) {
         fin.read(buf, 1);

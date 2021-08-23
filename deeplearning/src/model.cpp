@@ -1,11 +1,12 @@
 #include "model.h"
+#include "progressbar.h"
 #include "matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
 #define SUBSET(mat, idx) indexing((mat), IndexType(&(idx)[0], (idx).size()))
 
 std::ostream& operator<< (std::ostream& out, const HyperParameter& params) {
-  out << "{ epochs=" << params.epochs << ", batch=" << params.batch;
+  out << "{ epochs=" << params.epochs << ", batch=" << params.batchSize;
   out << ", learningRate=" << params.learningRate << ", lambda=" << params.lambda;
   out << ", validation_split=" << params.validation_split << " }";  
   return out;
@@ -98,50 +99,72 @@ void Model::train(const Matrix& data, const Matrix& y, HyperParameter params) {
         _validationLoss.resize(0);
     }
     
-    // set isTraining to true.
     for (int i = 0; i < params.epochs; i++) {
-        std::cout << "epoch " << i << std::endl;     
-        std::vector<int> v;
-        if (params.batch > 0 && params.batch < training.rows()) {
-            v = pickRandomIndex(training.rows(), params.batch);
-        }
-        
-        const Matrix& features = v.size() ? SUBSET(training, v) : training;
-        const Matrix& labels = v.size() ? SUBSET(trainingY, v) : trainingY;
-        
+//        std::vector<int> v;
+//        if (params.batchSize > 0 && params.batchSize < training.rows()) {
+//            v = pickRandomIndex(training.rows(), params.batchSize);
+//        }
+
+        // set isTraining to true.
         setTraining(true);
-        // do forward and backward propagators
-        _propagator->forward(_layers, _weights, _discreteWeight, features);        
-        _propagator->backward(_layers, _weights, _discreteWeight, labels);
+        std::vector<int> idx = DataUtil::randomIndex(training.rows());
         
-        for (int j = 0; j < _layers.size() - 1; j++) {
-            if (_weights[j].rows() != _propagator->getWeightChange(j).rows() ||
-                _weights[j].cols() != _propagator->getWeightChange(j).cols()) {
-                std::cout << std::vector<Eigen::Index>{_weights[j].rows(), _weights[j].cols(), _propagator->getWeightChange(j).rows(), _propagator->getWeightChange(j).cols()} << " j=" << j << std::endl;
-                std::cout << "_weights[j]=" << _weights[j] << std::endl;
-                std::cout << "_propagator->getWeightChange(j)=" << _propagator->getWeightChange(j) << std::endl;
-                throw DPLException("Model::train: getWeightChange matrix size not match.");
+        const Matrix& x_new = indexing(training, IndexType(&(idx)[0], (idx).size()));
+        const Matrix& y_new = indexing(trainingY, IndexType(&(idx)[0], (idx).size()));
+        
+        data_t currentLoss = .0;
+
+        std::string header = "Epoch " + ToString(i+1) + "/" + ToString(params.epochs);
+        int steps = (training.rows() + params.batchSize - 1) / params.batchSize;
+        ProgressBar bar(header, steps);
+
+        for (int k = 0; k < steps; k++) {
+            SHOW_PROGRESS(bar, k, "loss=" << currentLoss / std::max(k, 1));
+        
+            int pos = k * params.batchSize;
+            int end = std::min(pos + params.batchSize, (int)training.rows());
+            const Matrix& features = x_new.block(pos, 0, end - pos, x_new.cols());
+            const Matrix& labels = y_new.block(pos, 0, end - pos, y_new.cols());
+
+            // do forward and backward propagators
+            _propagator->forward(_layers, _weights, _discreteWeight, features);
+            
+            currentLoss += getOutputLayer()->loss(_propagator->getResult(), labels);
+            _propagator->backward(_layers, _weights, _discreteWeight, labels);
+            
+            for (int j = 0; j < _layers.size() - 1; j++) {
+                if (_weights[j].rows() != _propagator->getWeightChange(j).rows() ||
+                    _weights[j].cols() != _propagator->getWeightChange(j).cols()) {
+                    std::cout << std::vector<Eigen::Index>{_weights[j].rows(), _weights[j].cols(), _propagator->getWeightChange(j).rows(), _propagator->getWeightChange(j).cols()} << " j=" << j << std::endl;
+                    std::cout << "_weights[j]=" << _weights[j] << std::endl;
+                    std::cout << "_propagator->getWeightChange(j)=" << _propagator->getWeightChange(j) << std::endl;
+                    throw DPLException("Model::train: getWeightChange matrix size not match.");
+                }
+                _weights[j] -= params.learningRate * (_propagator->getWeightChange(j)
+                                        + params.lambda * _regular->diff(_weights[j]));
             }
-            _weights[j] -= params.learningRate * (_propagator->getWeightChange(j)
-                                    + params.lambda * _regular->diff(_weights[j]));
+            
+            _discreteWeight -= params.learningRate * (_propagator->discreteWeightChange() 
+                    + params.lambda * _regular->diff(_discreteWeight));
+            
         }
-        
-        _discreteWeight -= params.learningRate * (_propagator->discreteWeightChange() 
-                + params.lambda * _regular->diff(_discreteWeight));
+        _trainingLoss[i] = currentLoss / steps;
         
         // set isTraining to false.
         setTraining(false);
         if (validation.rows() > 0) {
             _validationLoss[i] = evaluate(validation, validationY);
+            PROGRESS_DONE(bar, "loss=" << _trainingLoss[i] << " val_loss=" << _validationLoss[i]);
+        } else {
+            PROGRESS_DONE(bar, "loss=" << _trainingLoss[i]);
         }
-//        _trainingLoss[i] = evaluate(training, trainingY);
     }
 }
 
 data_t Model::evaluate(const Matrix& testX, const Matrix& testY) {
     SimplePropagator prop;
     prop.forward(_layers, _weights, _discreteWeight, testX);
-    return getOutputLayer()->accuracy(prop.getResult(), testY);
+    return getOutputLayer()->loss(prop.getResult(), testY);
 }
 
 Matrix Model::predict(const Matrix& input) {

@@ -6,7 +6,7 @@
 
 struct HyperParameter {
     int epochs = 300;
-    int batch = -1;
+    int batchSize = 32;
     data_t learningRate = 0.01;
     data_t lambda = 0.0;
     data_t validation_split = 0.0;
