@@ -31,4 +31,5 @@ SET(BLAS_LIBRARIES /opt/OpenBLAS/lib/libopenblas.so) => SET(BLAS_LIBRARIES /path
 - 在build目录下运行命令行 `cmake ..`和`make`
 - 在`build/src`目录下，输入`./dpltest`运行单元测试，输入`./dpltest --run_test=Demo_suite`运行demo任务
 
-
+运行效果:
+![运行效果](https://github.com/gaolichen/deeplearning-cpp/blob/062641cb08dc791df5ef9d46782515a40764aeb9/dpltest.png)
